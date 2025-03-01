@@ -12,7 +12,8 @@ import { Navbar } from "./common";
 import LandingPage from "./pages/LandingPage/LandingPage";
 import ExamplePage from "./pages/ExamplePage";
 import HomePage from "./pages/HomePage/HomePage";
-
+import { SignIn, SignUp } from "./pages/Auth"; // Make sure this import is correct
+import ForgotPassword from "./pages/Auth/ForgotPassword";
 import Quagga from "quagga";
 
 import "./App.css";
@@ -320,22 +321,49 @@ function BarcodeScanner() {
 }
 
 function App() {
-  // Mock authentication state - this would be handled by a proper auth system later
+  // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check for existing user session on app load
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+  };
 
   return (
     <Router>
-      <Navbar isLoggedIn={isLoggedIn} />
+      <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
       <div className="app-container">
         <Routes>
+          {/* Public routes */}
           <Route
             path="/"
             element={<LandingPage setIsLoggedIn={setIsLoggedIn} />}
           />
-          <Route path="/ex" element={<ExamplePage />} />
+          <Route
+            path="/signin"
+            element={<SignIn setIsLoggedIn={setIsLoggedIn} />}
+          />
+          <Route
+            path="/signup"
+            element={<SignUp setIsLoggedIn={setIsLoggedIn} />}
+          />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          {/* Protected routes */}
           <Route path="/home" element={<HomePage />} />
           <Route path="/scan" element={<BarcodeScanner />} />
-          {/* Development route - remove before production */}
+
+          {/* Development routes */}
+          <Route path="/ex" element={<ExamplePage />} />
           <Route
             path="/dev-login"
             element={<DevAutoLogin setIsLoggedIn={setIsLoggedIn} />}
