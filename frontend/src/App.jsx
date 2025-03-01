@@ -155,8 +155,6 @@ function BarcodeScanner() {
             readers: [
               "upc_reader",
               "upc_e_reader",
-              "ean_reader",
-              "ean_8_reader",
             ],
           },
         },
