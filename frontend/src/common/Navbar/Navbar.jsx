@@ -5,7 +5,7 @@ import "./Navbar.css";
 const Navbar = ({ isLoggedIn, onLogout }) => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("");
-  
+
   useEffect(() => {
     // Get user info from localStorage if logged in
     if (isLoggedIn) {
@@ -22,7 +22,7 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
       }
     }
   }, [isLoggedIn]);
-  
+
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
@@ -32,15 +32,15 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
 
   const handleHomeClick = (e) => {
     e.preventDefault();
-    navigate('/home', { state: { fromLogin: true } });
+    navigate("/home", { state: { fromLogin: true } });
   };
-  
+
   const handleSignIn = () => {
-    navigate('/signin');
+    navigate("/signin");
   };
-  
+
   const handleSignUp = () => {
-    navigate('/signup');
+    navigate("/signup");
   };
 
   return (
@@ -51,11 +51,17 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
       <div className="navbar-links">
         {isLoggedIn ? (
           <>
-            <Link to="/home" onClick={handleHomeClick}>Dashboard</Link>
+            <Link to="/home" onClick={handleHomeClick}>
+              Dashboard
+            </Link>
             <Link to="/recipes">Recipes</Link>
             <Link to="/profile">Profile</Link>
-            {userName && <span className="user-greeting">Hello, {userName}</span>}
-            <button className="logout-button" onClick={handleLogout}>Logout</button>
+            {userName && (
+              <span className="user-greeting">Hello, {userName}</span>
+            )}
+            <button className="logout-button" onClick={handleLogout}>
+              Logout
+            </button>
           </>
         ) : (
           <>
@@ -67,8 +73,12 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
             <Link to="/dev-login" className="dev-link">
               Dev: Auto Login
             </Link>
-            <button className="login-button" onClick={handleSignIn}>Login</button>
-            <button className="signup-button" onClick={handleSignUp}>Sign Up</button>
+            <button className="login-button" onClick={handleSignIn}>
+              Login
+            </button>
+            <button className="signup-button" onClick={handleSignUp}>
+              Sign Up
+            </button>
           </>
         )}
       </div>
