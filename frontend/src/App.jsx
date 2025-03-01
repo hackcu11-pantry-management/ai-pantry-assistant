@@ -42,62 +42,68 @@ function BarcodeScanner() {
   const lookupUPC = async (upc) => {
     setIsLoading(true);
     setError(null);
-    
+
     const maxRetries = 3;
     let retryCount = 0;
-    
+
     while (retryCount < maxRetries) {
       try {
-        const response = await fetch(`http://localhost:5001/api/lookup-upc?upc=${upc}`);
+        const response = await fetch(
+          `http://localhost:5001/api/lookup-upc?upc=${upc}`,
+        );
         const data = await response.json();
-        
-        console.log('Full API Response:', data);
-        
+
+        console.log("Full API Response:", data);
+
         if (response.status === 429) {
           // Rate limited - wait and retry
           retryCount++;
           if (retryCount < maxRetries) {
-            setError(`Rate limited, retrying in ${retryCount * 2} seconds... (Attempt ${retryCount}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, retryCount * 2000));
+            setError(
+              `Rate limited, retrying in ${retryCount * 2} seconds... (Attempt ${retryCount}/${maxRetries})`,
+            );
+            await new Promise((resolve) =>
+              setTimeout(resolve, retryCount * 2000),
+            );
             continue;
           }
         }
-        
+
         if (!data.success) {
-          throw new Error(data.error || 'Failed to lookup product');
+          throw new Error(data.error || "Failed to lookup product");
         }
-        
+
         if (data.items && data.items[0]) {
           // Map the API response fields directly
           const item = data.items[0];
-          console.log('Item from API:', item);
-          console.log('Raw productname:', item.productname);
-          console.log('Raw productbrand:', item.productbrand);
-          console.log('Object keys:', Object.keys(item));
-          
+          console.log("Item from API:", item);
+          console.log("Raw productname:", item.productname);
+          console.log("Raw productbrand:", item.productbrand);
+          console.log("Object keys:", Object.keys(item));
+
           // Ensure we're accessing the properties correctly
           const mappedData = {
-            title: item['productname'],
-            brand: item['productbrand'],
-            category: item['productcategory'],
-            size: item['productsize'],
-            weight: item['productweight'],
-            color: item['productcolor'],
-            model: item['productmodel'],
-            dimension: item['productdimension'],
-            description: item['productdescription'],
-            lowest_recorded_price: item['productlowestprice'],
-            highest_recorded_price: item['producthighestprice'],
-            currency: item['productcurrency'],
-            images: item['productimages'] || [],
-            upc: item['productupc']
+            title: item["productname"],
+            brand: item["productbrand"],
+            category: item["productcategory"],
+            size: item["productsize"],
+            weight: item["productweight"],
+            color: item["productcolor"],
+            model: item["productmodel"],
+            dimension: item["productdimension"],
+            description: item["productdescription"],
+            lowest_recorded_price: item["productlowestprice"],
+            highest_recorded_price: item["producthighestprice"],
+            currency: item["productcurrency"],
+            images: item["productimages"] || [],
+            upc: item["productupc"],
           };
-          
-          console.log('Mapped Product Data:', mappedData);
+
+          console.log("Mapped Product Data:", mappedData);
           setProductData(mappedData);
           break; // Success - exit the retry loop
         } else {
-          throw new Error('No product data found');
+          throw new Error("No product data found");
         }
       } catch (err) {
         retryCount++;
@@ -109,7 +115,7 @@ function BarcodeScanner() {
         }
       }
     }
-    
+
     setIsLoading(false);
   };
 
@@ -228,11 +234,7 @@ function BarcodeScanner() {
         }}
       />
 
-      {isLoading && (
-        <div className="loading">
-          Looking up product...
-        </div>
-      )}
+      {isLoading && <div className="loading">Looking up product...</div>}
 
       {barcode && !isLoading && (
         <div className="result">
@@ -245,28 +247,46 @@ function BarcodeScanner() {
         <div className="product-info">
           <h3>Product Information:</h3>
           <div className="product-details">
-            <p><strong>Name:</strong> {productData.title}</p>
-            <p><strong>Brand:</strong> {productData.brand}</p>
-            <p><strong>Category:</strong> {productData.category}</p>
+            <p>
+              <strong>Name:</strong> {productData.title}
+            </p>
+            <p>
+              <strong>Brand:</strong> {productData.brand}
+            </p>
+            <p>
+              <strong>Category:</strong> {productData.category}
+            </p>
             {productData.size && (
-              <p><strong>Size:</strong> {productData.size}</p>
+              <p>
+                <strong>Size:</strong> {productData.size}
+              </p>
             )}
             {productData.weight && (
-              <p><strong>Weight:</strong> {productData.weight}</p>
+              <p>
+                <strong>Weight:</strong> {productData.weight}
+              </p>
             )}
             {productData.color && (
-              <p><strong>Color:</strong> {productData.color}</p>
+              <p>
+                <strong>Color:</strong> {productData.color}
+              </p>
             )}
             {productData.model && (
-              <p><strong>Model:</strong> {productData.model}</p>
+              <p>
+                <strong>Model:</strong> {productData.model}
+              </p>
             )}
             {productData.dimension && (
-              <p><strong>Dimensions:</strong> {productData.dimension}</p>
-            )}
-            {(productData.lowest_recorded_price > 0 || productData.highest_recorded_price > 0) && (
               <p>
-                <strong>Price Range:</strong> {productData.currency || '$'}
-                {productData.lowest_recorded_price} - {productData.highest_recorded_price}
+                <strong>Dimensions:</strong> {productData.dimension}
+              </p>
+            )}
+            {(productData.lowest_recorded_price > 0 ||
+              productData.highest_recorded_price > 0) && (
+              <p>
+                <strong>Price Range:</strong> {productData.currency || "$"}
+                {productData.lowest_recorded_price} -{" "}
+                {productData.highest_recorded_price}
               </p>
             )}
             {productData.offers && productData.offers.length > 0 && (
@@ -282,12 +302,14 @@ function BarcodeScanner() {
                 </ul>
               </div>
             )}
-            <p><strong>Description:</strong> {productData.description}</p>
+            <p>
+              <strong>Description:</strong> {productData.description}
+            </p>
           </div>
           {productData.images && productData.images.length > 0 && (
             <div className="product-image">
-              <img 
-                src={productData.images[0]} 
+              <img
+                src={productData.images[0]}
                 alt={productData.title}
                 style={{ maxWidth: "200px", marginTop: "10px" }}
               />
