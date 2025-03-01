@@ -1,10 +1,10 @@
 CREATE DATABASE pantryDatabase;
 
-USE pantry;
+USE pantryDatabase;
 
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS products;
-DROP TABLE IF EXISTS pantry_entries;
+DROP TABLE IF EXISTS usersProducts;
 
 CREATE TABLE users(
     userID SERIAL PRIMARY KEY,
@@ -18,11 +18,23 @@ CREATE TABLE users(
 CREATE TABLE products (
     productUPC SERIAL PRIMARY KEY,
     productName VARCHAR(50) NOT NULL,
-    productDescription VARCHAR(100)
+    productDescription VARCHAR(515),
+    productBrand VARCHAR (64),
+    productModel VARCHAR (32),
+    productColor VARCHAR (32),
+    productSize VARCHAR (32),
+    productDimension VARCHAR (32),
+    productWeight VARCHAR (16),
+    productCategory TEXT,
+    productLowestPrice FLOAT,
+    productHighestPrice FLOAT,
+    productCurrency VARCHAR (10),
+    productImages TEXT[]
+
 );
 
-CREATE TABLE pantry_entries (
-    orderID SERIAL PRIMARY KEY,
+CREATE TABLE usersProducts (
+    pantryID SERIAL PRIMARY KEY,
     userID INT NOT NULL,
     productUPC INT NOT NULL,
     quantity FLOAT,
