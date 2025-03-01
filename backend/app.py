@@ -5,10 +5,36 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 from dotenv import load_dotenv
+import openai
 
 load_dotenv()
 
 app = Flask(__name__)
+
+# Configure OpenAI
+openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Predefined food categories
+FOOD_CATEGORIES = [
+    "Fruits & Vegetables",
+    "Meat & Seafood",
+    "Dairy & Eggs",
+    "Bread & Bakery",
+    "Pantry Staples",
+    "Snacks",
+    "Beverages",
+    "Frozen Foods",
+    "Canned Goods",
+    "Condiments & Sauces",
+    "Baking Supplies",
+    "Breakfast Foods",
+    "Pasta & Rice",
+    "Herbs & Spices",
+    "Ready-to-Eat Meals",
+    "Baby Food & Formula",
+    "Pet Food",
+    "Other"
+]
 
 # Enable CORS for all routes with specific configuration
 CORS(app, 
@@ -51,35 +77,52 @@ def find_product_in_db(upc):
     except Exception as e:
         return None, str(e)
 
-def map_category(category):
-    """Map API category to our enum values"""
+def get_gpt_category(product_data):
+    """Use GPT to categorize a food product based on available information"""
+    try:
+        # Construct a detailed prompt with product information
+        product_info = f"""
+Product Name: {product_data.get('title', '')}
+Brand: {product_data.get('brand', '')}
+Description: {product_data.get('description', '')}
+"""
+        
+        prompt = f"""Based on the following product information, categorize this food item into EXACTLY ONE of these categories: {', '.join(FOOD_CATEGORIES)}. 
+Respond with ONLY the category name, nothing else.
+
+Product Information:
+{product_info}
+
+Remember:
+1. Respond with EXACTLY ONE category from the list
+2. Do not add any explanation or additional text
+3. If unsure, use the most specific category that fits, or 'Other' as last resort"""
+
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a precise food categorization assistant. You only respond with exact category names from the provided list."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0,
+            max_tokens=20
+        )
+        
+        category = response.choices[0].message.content.strip()
+        
+        # Validate the response is in our category list
+        if category not in FOOD_CATEGORIES:
+            return "Other"
+            
+        return category
+    except Exception as e:
+        print(f"GPT categorization error: {e}")
+        return "Other"
+
+def map_category(category, product_data):
+    """Map API category to our enum values with GPT enhancement for food items"""
     category = category.lower()
-    if 'food' in category or 'beverage' in category:
-        return 'Food & Beverages'
-    elif 'health' in category or 'beauty' in category:
-        return 'Health & Beauty'
-    elif 'home' in category or 'kitchen' in category:
-        return 'Home & Kitchen'
-    elif 'electronic' in category:
-        return 'Electronics'
-    elif 'clothing' in category or 'apparel' in category or 'accessories' in category:
-        return 'Clothing & Accessories'
-    elif 'book' in category or 'media' in category:
-        return 'Books & Media'
-    elif 'sport' in category or 'outdoor' in category:
-        return 'Sports & Outdoors'
-    elif 'toy' in category or 'game' in category:
-        return 'Toys & Games'
-    elif 'pet' in category:
-        return 'Pet Supplies'
-    elif 'office' in category:
-        return 'Office Supplies'
-    elif 'automotive' in category:
-        return 'Automotive'
-    elif 'tool' in category:
-        return 'Tools & Home Improvement'
-    else:
-        return 'Other'
+    return get_gpt_category(product_data)
 
 def save_product_to_db(product_data):
     """Save product to database"""
@@ -88,9 +131,9 @@ def save_product_to_db(product_data):
         if not conn:
             return False, "Database connection failed"
         
-        # Map the category
+        # Map the category with enhanced food categorization
         raw_category = product_data.get('category', '')
-        mapped_category = map_category(raw_category)
+        mapped_category = map_category(raw_category, product_data)
         
         cur = conn.cursor()
         cur.execute("""
