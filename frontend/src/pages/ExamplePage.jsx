@@ -137,7 +137,7 @@ const ExamplePage = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">UPC Product Lookup</h1>
-      
+
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="flex gap-2">
           <input
@@ -148,12 +148,12 @@ const ExamplePage = () => {
             className="flex-1 p-2 border rounded"
             required
           />
-          <button 
+          <button
             type="submit"
             disabled={loading}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
           >
-            {loading ? 'Looking up...' : 'Lookup'}
+            {loading ? "Looking up..." : "Lookup"}
           </button>
         </div>
       </form>
