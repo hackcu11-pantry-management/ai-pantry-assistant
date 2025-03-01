@@ -13,22 +13,29 @@ const ExamplePage = () => {
     setResult(null);
 
     try {
-      const response = await fetch(`http://localhost:5001/api/lookup-upc?upc=${encodeURIComponent(upc)}`, {
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
+      const response = await fetch(
+        `http://localhost:5001/api/lookup-upc?upc=${encodeURIComponent(upc)}`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Failed to parse error response" }));
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`,
+        );
       }
 
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      console.error('Error fetching UPC data:', err);
-      setError(err.message || 'Failed to lookup UPC');
+      console.error("Error fetching UPC data:", err);
+      setError(err.message || "Failed to lookup UPC");
     } finally {
       setLoading(false);
     }
@@ -39,24 +46,26 @@ const ExamplePage = () => {
       <div key={item.upc} className="border rounded-lg p-4 mb-4 shadow-sm">
         <h2 className="text-xl font-semibold mb-2">{item.title}</h2>
         {item.images && item.images.length > 0 && (
-          <img 
-            src={item.images[0]} 
+          <img
+            src={item.images[0]}
             alt={item.title}
             className="w-32 h-32 object-contain mb-4"
           />
         )}
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div className="font-medium">Brand:</div>
-          <div>{item.brand || 'N/A'}</div>
-          
+          <div>{item.brand || "N/A"}</div>
+
           <div className="font-medium">Category:</div>
-          <div>{item.category || 'N/A'}</div>
-          
+          <div>{item.category || "N/A"}</div>
+
           <div className="font-medium">UPC:</div>
           <div>{item.upc}</div>
-          
+
           <div className="font-medium">Description:</div>
-          <div className="col-span-2">{item.description || 'No description available'}</div>
+          <div className="col-span-2">
+            {item.description || "No description available"}
+          </div>
         </div>
       </div>
     );
@@ -65,7 +74,7 @@ const ExamplePage = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">UPC Product Lookup</h1>
-      
+
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="flex gap-2">
           <input
@@ -76,12 +85,12 @@ const ExamplePage = () => {
             className="flex-1 p-2 border rounded"
             required
           />
-          <button 
+          <button
             type="submit"
             disabled={loading}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
           >
-            {loading ? 'Looking up...' : 'Lookup'}
+            {loading ? "Looking up..." : "Lookup"}
           </button>
         </div>
       </form>
@@ -94,7 +103,9 @@ const ExamplePage = () => {
 
       {result && result.items && (
         <div>
-          <h2 className="text-lg font-semibold mb-3">Found {result.items.length} item(s):</h2>
+          <h2 className="text-lg font-semibold mb-3">
+            Found {result.items.length} item(s):
+          </h2>
           {result.items.map(renderProductInfo)}
         </div>
       )}
