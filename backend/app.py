@@ -51,6 +51,36 @@ def find_product_in_db(upc):
     except Exception as e:
         return None, str(e)
 
+def map_category(category):
+    """Map API category to our enum values"""
+    category = category.lower()
+    if 'food' in category or 'beverage' in category:
+        return 'Food & Beverages'
+    elif 'health' in category or 'beauty' in category:
+        return 'Health & Beauty'
+    elif 'home' in category or 'kitchen' in category:
+        return 'Home & Kitchen'
+    elif 'electronic' in category:
+        return 'Electronics'
+    elif 'clothing' in category or 'apparel' in category or 'accessories' in category:
+        return 'Clothing & Accessories'
+    elif 'book' in category or 'media' in category:
+        return 'Books & Media'
+    elif 'sport' in category or 'outdoor' in category:
+        return 'Sports & Outdoors'
+    elif 'toy' in category or 'game' in category:
+        return 'Toys & Games'
+    elif 'pet' in category:
+        return 'Pet Supplies'
+    elif 'office' in category:
+        return 'Office Supplies'
+    elif 'automotive' in category:
+        return 'Automotive'
+    elif 'tool' in category:
+        return 'Tools & Home Improvement'
+    else:
+        return 'Other'
+
 def save_product_to_db(product_data):
     """Save product to database"""
     try:
@@ -58,13 +88,18 @@ def save_product_to_db(product_data):
         if not conn:
             return False, "Database connection failed"
         
+        # Map the category
+        raw_category = product_data.get('category', '')
+        mapped_category = map_category(raw_category)
+        
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO products (
                 productUPC, productName, productDescription, productBrand,
                 productCategory, productLowestPrice, productHighestPrice,
-                productCurrency, productImages
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                productCurrency, productImages, productModel, productColor,
+                productSize, productDimension, productWeight
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (productUPC) DO UPDATE SET
                 productName = EXCLUDED.productName,
                 productDescription = EXCLUDED.productDescription,
@@ -73,23 +108,34 @@ def save_product_to_db(product_data):
                 productLowestPrice = EXCLUDED.productLowestPrice,
                 productHighestPrice = EXCLUDED.productHighestPrice,
                 productCurrency = EXCLUDED.productCurrency,
-                productImages = EXCLUDED.productImages
+                productImages = EXCLUDED.productImages,
+                productModel = EXCLUDED.productModel,
+                productColor = EXCLUDED.productColor,
+                productSize = EXCLUDED.productSize,
+                productDimension = EXCLUDED.productDimension,
+                productWeight = EXCLUDED.productWeight
         """, (
             product_data['upc'],
             product_data.get('title', ''),
             product_data.get('description', '')[:515],
             product_data.get('brand', ''),
-            product_data.get('category', ''),
-            product_data.get('lowest_price', 0.0),
-            product_data.get('highest_price', 0.0),
+            mapped_category,
+            product_data.get('lowest_recorded_price', 0.0),
+            product_data.get('highest_recorded_price', 0.0),
             product_data.get('currency', 'USD'),
-            product_data.get('images', [])
+            product_data.get('images', []),
+            product_data.get('model', ''),
+            product_data.get('color', ''),
+            product_data.get('size', ''),
+            product_data.get('dimension', ''),
+            product_data.get('weight', '')
         ))
         conn.commit()
         cur.close()
         conn.close()
         return True, None
     except Exception as e:
+        print(f"Failed to cache product: {str(e)}")
         return False, str(e)
 
 @app.route('/api/lookup-upc', methods=['GET'])
