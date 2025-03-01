@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,10 +7,12 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+import { Navbar } from "./common";
+
 import LandingPage from "./pages/LandingPage/LandingPage";
 import ExamplePage from "./pages/ExamplePage";
-import HomePage from "./pages/HomePage";
-import Navbar from "./components/Navbar";
+import HomePage from "./pages/HomePage/HomePage";
+
 import Quagga from "quagga";
 
 import "./App.css";

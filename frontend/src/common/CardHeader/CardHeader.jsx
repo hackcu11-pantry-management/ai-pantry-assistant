@@ -11,8 +11,8 @@ const CardHeader = ({ text, buttons }) => {
     <div className="card-header">
       <div className="header-text">{text}</div>
       <div className="header-buttons">
-        {(buttons ?? []).map(({ text, onClick, variant }) => (
-          <Button variant={variant} onClick={onClick}>
+        {(buttons ?? []).map(({ text, onClick, variant }, index) => (
+          <Button key={index} variant={variant} onClick={onClick}>
             {text}
           </Button>
         ))}
