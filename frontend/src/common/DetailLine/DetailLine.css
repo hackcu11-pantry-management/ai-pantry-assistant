@@ -1,0 +1,19 @@
+/** @module DetailLine.css */
+
+.detail-line {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.detail-line span {
+    font-weight: bold;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-right: 8px;
+}
+
+.detail-line .line {
+    flex-grow: 1;
+    border-bottom: 1px solid gray;
+}

@@ -1,9 +1,15 @@
 /** @module LandingPage.jsx */
 
 import React from "react";
+import { Card, CardHeader, DetailLine, ProductGrid } from "../../common";
 
-import { Card, CardHeader } from "../../common";
 import "./LandingPage.css";
+
+const items = [
+  { id: 1, name: "Milk", expiry: "2-28", image: "/images/milk.png" },
+  { id: 2, name: "Eggs", expiry: "3-05", image: "/images/eggs.png" },
+  { id: 3, name: "Cheese", expiry: "3-15", image: "/images/cheese.png" },
+];
 
 const LandingPage = () => {
   return (
@@ -14,23 +20,19 @@ const LandingPage = () => {
           buttons={[
             {
               text: "Add Item",
-              onClick: () => console.log("button clicked"),
+              onClick: () => console.log("Add Item clicked"),
               variant: "contained",
             },
             {
               text: "Remove Item",
-              onClick: () => console.log("2button clicked"),
+              onClick: () => console.log("Remove Item clicked"),
               variant: "contained",
             },
           ]}
         />
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-        mollit anim id est laborum.
+        <DetailLine title="Dairy" />
+        <ProductGrid data={items} />
+        <DetailLine title="Meats" />
       </Card>
     </div>
   );
