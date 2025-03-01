@@ -1,33 +1,50 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import "./HomePage.css";
 
 const HomePage = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Mock user data - this would come from authentication in the future
   const [user, setUser] = useState({
     name: "User",
     pantryItems: [
-      { id: 1, name: "Pasta", quantity: 2, unit: "boxes", expiryDate: "2023-12-31" },
-      { id: 2, name: "Tomatoes", quantity: 5, unit: "items", expiryDate: "2023-11-15" },
-      { id: 3, name: "Cheese", quantity: 1, unit: "block", expiryDate: "2023-11-10" },
+      {
+        id: 1,
+        name: "Pasta",
+        quantity: 2,
+        unit: "boxes",
+        expiryDate: "2023-12-31",
+      },
+      {
+        id: 2,
+        name: "Tomatoes",
+        quantity: 5,
+        unit: "items",
+        expiryDate: "2023-11-15",
+      },
+      {
+        id: 3,
+        name: "Cheese",
+        quantity: 1,
+        unit: "block",
+        expiryDate: "2023-11-10",
+      },
     ],
     shoppingList: [
       { id: 1, name: "Milk", quantity: 1, unit: "gallon" },
       { id: 2, name: "Eggs", quantity: 12, unit: "items" },
-    ]
+    ],
   });
 
   // For development: Add a message when accessing directly
   const [directAccess, setDirectAccess] = useState(false);
-  
+
   useEffect(() => {
     // Check if we're accessing the page directly (for development purposes)
     const isDirect = !location.state || !location.state.fromLogin;
     setDirectAccess(isDirect);
-    
+
     // In a real app, we would check authentication here
     // and redirect to login if not authenticated
   }, [location]);
@@ -40,7 +57,7 @@ const HomePage = () => {
           <p>In production, this would require authentication.</p>
         </div>
       )}
-      
+
       <header className="home-header">
         <h1>Welcome to AI Pantry Assistant, {user.name}!</h1>
         <p>Manage your pantry and get recipe suggestions</p>
@@ -60,10 +77,12 @@ const HomePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {user.pantryItems.map(item => (
+                  {user.pantryItems.map((item) => (
                     <tr key={item.id}>
                       <td>{item.name}</td>
-                      <td>{item.quantity} {item.unit}</td>
+                      <td>
+                        {item.quantity} {item.unit}
+                      </td>
                       <td>{item.expiryDate}</td>
                     </tr>
                   ))}
@@ -81,7 +100,7 @@ const HomePage = () => {
           <div className="shopping-items">
             {user.shoppingList.length > 0 ? (
               <ul>
-                {user.shoppingList.map(item => (
+                {user.shoppingList.map((item) => (
                   <li key={item.id}>
                     {item.name} - {item.quantity} {item.unit}
                   </li>
@@ -115,4 +134,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage; 
+export default HomePage;

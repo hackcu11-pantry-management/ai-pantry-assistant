@@ -20,8 +20,12 @@ const Navbar = ({ isLoggedIn }) => {
           <>
             <Link to="/">Home</Link>
             <Link to="/about">About</Link>
-            <Link to="/home" className="dev-link">Dev: HomePage</Link>
-            <Link to="/dev-login" className="dev-link">Dev: Auto Login</Link>
+            <Link to="/home" className="dev-link">
+              Dev: HomePage
+            </Link>
+            <Link to="/dev-login" className="dev-link">
+              Dev: Auto Login
+            </Link>
             <button className="login-button">Login</button>
             <button className="signup-button">Sign Up</button>
           </>
@@ -31,4 +35,4 @@ const Navbar = ({ isLoggedIn }) => {
   );
 };
 
-export default Navbar; 
+export default Navbar;
