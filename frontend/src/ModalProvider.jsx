@@ -6,6 +6,8 @@ import { useDispatch } from "react-redux";
 import Modal from "./common/Modal/Modal";
 import { toggleModal } from "./redux/actions/modalActions";
 
+import ScanItemModal from "./modals/ScanItemModal/ScanItemModal";
+
 const ModalProvider = () => {
   const dispatch = useDispatch();
 
@@ -28,19 +30,7 @@ const ModalProvider = () => {
       >
         <p>This is the Add Item modal content.</p>
       </Modal>
-      <Modal
-        modal_id="removeItemModal"
-        title="Remove Item"
-        footerButtons={[
-          {
-            text: "Close",
-            variant: "contained",
-            onClick: () => handleClose("removeItemModal"),
-          },
-        ]}
-      >
-        <p>This is the Remove Item modal content.</p>
-      </Modal>
+      <ScanItemModal />
       {/* Add more modals here as needed */}
     </>
   );
