@@ -30,6 +30,8 @@ request_count = 0
 JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key')
 JWT_EXPIRATION_HOURS = 24
 
+client = openai.OpenAI()
+
 # Predefined food categories
 FOOD_CATEGORIES = [
     "Fruits & Vegetables",
@@ -629,15 +631,8 @@ from datetime import datetime
 
 @app.route('/api/get-recipes', methods=['POST'])
 def get_recipes():
-    """
-    Gets recipe recommendations based on user's pantry items.
-    Pantry items are provided in the request body.
-    """
     try:
-        # Get user ID from request (optional, depending on your use case)
         user_id = request.args.get('user_id')
-        
-        # Get pantry items from the request body
         request_data = request.get_json()
         if not request_data or 'pantryItems' not in request_data:
             return jsonify({
@@ -647,27 +642,29 @@ def get_recipes():
             }), 400
 
         pantry_items = request_data['pantryItems']
-        
         if not pantry_items:
             return jsonify({
                 "success": False,
                 "error": "No pantry items provided",
                 "status": "NOT_FOUND",
             }), 404
-            
-        # Sort pantry items by expiration date (earliest first)
-        pantry_items.sort(key=lambda x: datetime.strptime(x.get('expirationDate', '9999-12-31'), '%Y-%m-%d'))
 
-        # Format pantry items for the prompt
-        pantry_list = ""
-        for item in pantry_items:
-            quantity_str = f"{item.get('quantity', 'some')} {item.get('quantityType', '')}".strip()
-            expiration_date = item.get('expirationDate', 'unknown')
-            pantry_list += f"- {quantity_str} {item.get('productName', 'Unknown')} (Category: {item.get('productCategory', 'Unknown')}, Expires: {expiration_date})\n"
-            
-        # Generate recipes using GPT
+        def parse_date(date_str):
+            try:
+                return datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S %Z')
+            except ValueError:
+                return datetime.strptime(date_str, '%Y-%m-%d')
+
+        pantry_items.sort(key=lambda x: parse_date(x.get('expirationDate', '9999-12-31')))
+
+        pantry_list = "\n".join([
+            f"- {item.get('quantity', 'some')} {item.get('quantityType', '')} {item.get('productName', 'Unknown')} "
+            f"(Category: {item.get('productCategory', 'Unknown')}, Expires: {item.get('expirationDate', 'unknown')})"
+            for item in pantry_items
+        ])
+
         prompt = f"""Based on these ingredients in my pantry, suggest 4 different recipes I could make. 
-The first two recipes should prioritize recipes that use ingredients with the earliest expiration dates, while maintaining recipe quality. The other two, dont need to prioritize expiration date.
+The first two recipes should prioritize recipes that use ingredients with the earliest expiration dates, while maintaining recipe quality. The other two, don't need to prioritize expiration date.
 
 Here are my pantry items, sorted by expiration date (earliest first):
 {pantry_list}
@@ -681,40 +678,22 @@ For each recipe, provide the following information in EXACTLY this format:
 5. Cooking time: [Approximate cooking time]
 6. Urgency: [Either "Urgent" or "Not Urgent"]
 
-Here is an example of the expected format:
-
-1. Recipe name: Cheese and Tomato Omelette
-2. Brief description: A quick and easy omelette using cheese and tomatoes.
-3. Ingredients: 
-   - 2 eggs
-   - 1/2 cup shredded cheese
-   - 1 tomato, diced
-4. Instructions:
-   - Beat the eggs in a bowl.
-   - Heat a non-stick pan over medium heat.
-   - Pour the eggs into the pan and cook until set.
-   - Add the cheese and tomatoes, then fold the omelette in half.
-5. Cooking time: 10 minutes
-6. Urgency: Urgent
-
 Now, suggest 4 recipes following the exact format above.
-
-Format each recipe as a distinct section, with the urgent recipes coming first. If you need common pantry staples not listed (salt, pepper, oil, etc.), you can assume I have those. This doesn't include items like sugar, flour 
 """
 
-        response = openai.chat.completions.create(
+        # Use the new OpenAI client-based method
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful cooking assistant that creates recipes based on available ingredients. Prioritize recipes that use ingredients with the earliest expiration dates. You must follow the exact format provided by the user."},
+                {"role": "system", "content": "You are a helpful cooking assistant that creates recipes based on available ingredients."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
             max_tokens=1500
         )
-        
+
         recipe_text = response.choices[0].message.content.strip()
-        
-        # Parse the recipe text into structured data using GPT
+
         parser_prompt = f"""Parse the following recipe text into a structured JSON format with an array of recipe objects.
 Each recipe object should have fields for: name, description, ingredients (as an array), instructions (as an array of steps), cookingTime, and mealType.
 
@@ -724,25 +703,24 @@ Recipe text:
 Respond with ONLY valid JSON, no explanation or additional text.
 """
 
-        parser_response = openai.chat.completions.create(
+        parser_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a precise JSON parser that converts recipe text to structured data."},
                 {"role": "user", "content": parser_prompt}
             ],
             temperature=0,
-            response_format={"type": "json_object"},
             max_tokens=1500
         )
-        
+
         parsed_recipes = parser_response.choices[0].message.content.strip()
-        
+
         return jsonify({
             "success": True,
             "recipes": parsed_recipes,
             "pantryItems": pantry_items
         })
-        
+
     except Exception as e:
         return jsonify({
             "success": False,

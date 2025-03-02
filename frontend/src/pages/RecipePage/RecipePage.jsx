@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+/** @module RecipePage.jsx */
+
+import React, { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import "./RecipePage.css";
 import PizzaImageLoadingScreen from "../../PizzaLoader/PizzaImageLoadingScreen";
 
@@ -7,44 +10,18 @@ const RecipePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Hardcoded JSON data
-  const pantryItems = [
-    {
-      productName: "Coffee Creamer",
-      productCategory: "Dairy & Eggs",
-      quantity: 2,
-      quantityType: "gallons",
-      expirationDate: "2027-04-02",
-    },
-    {
-      productName: "Milk",
-      productCategory: "Dairy & Eggs",
-      quantity: 1,
-      quantityType: "gallons",
-      expirationDate: "2025-04-15",
-    },
-    {
-      productName: "Pineapple",
-      productCategory: "Fruits & Vegetables",
-      quantity: 5,
-      quantityType: "items",
-      expirationDate: "2025-04-02",
-    },
-    {
-      productName: "Potatoes",
-      productCategory: "Fruits & Vegetables",
-      quantity: 3,
-      quantityType: "items",
-      expirationDate: "2028-04-02",
-    },
-    {
-      productName: "Eggs",
-      productCategory: "Dairy & Eggs",
-      quantity: 2,
-      quantityType: "items",
-      expirationDate: "2025-04-07",
-    },
-  ];
+  const pantryItems =
+    useSelector((state) => state.productState?.products) ?? [];
+
+  const structuredPantryItems = useMemo(() => {
+    return pantryItems.map((item) => ({
+      productName: item?.productname,
+      productCategory: item?.productcategory,
+      quantity: item?.quantity,
+      quantityType: item?.quantitytype ?? "units",
+      expirationDate: item?.expiration_date,
+    }));
+  }, [pantryItems]);
 
   // Fetch recipes from the backend when the component mounts
   useEffect(() => {
@@ -55,7 +32,7 @@ const RecipePage = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ pantryItems }),
+          body: JSON.stringify({ pantryItems: structuredPantryItems }),
         });
 
         if (!response.ok) {
@@ -71,7 +48,7 @@ const RecipePage = () => {
             typeof data.recipes === "string"
               ? JSON.parse(data.recipes)
               : data.recipes;
-          setRecipes(parsedRecipes.recipes || []);
+          setRecipes(parsedRecipes || []);
         } else {
           throw new Error(data.error || "Failed to get recipes");
         }
@@ -83,7 +60,7 @@ const RecipePage = () => {
     };
 
     fetchRecipes();
-  }, []);
+  }, [structuredPantryItems]);
 
   return (
     <div className="container recipe-page">

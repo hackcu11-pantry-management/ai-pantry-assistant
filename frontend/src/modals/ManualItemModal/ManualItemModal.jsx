@@ -1,14 +1,14 @@
 /** @module ManualItemModal.jsx */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Modal, Button } from "../common";
-import { toggleModal } from "../redux/actions/modalActions";
-import { addToPantry, addProduct } from "../redux/actions/productActions";
-import { addSnackbar } from "../redux/actions/snackbarActions";
-
+import { Modal } from "../../common";
+import { toggleModal } from "../../redux/actions/modalActions";
+import { addToPantry, addProduct } from "../../redux/actions/productActions";
+import { addSnackbar } from "../../redux/actions/snackbarActions";
 import Tooltip from "@mui/material/Tooltip";
 import InfoIcon from "@mui/icons-material/Info";
+import "./ManualItemModal.css";
 
 // Food categories from backend
 const FOOD_CATEGORIES = [
@@ -29,7 +29,7 @@ const FOOD_CATEGORIES = [
   "Ready-to-Eat Meals",
   "Baby Food & Formula",
   "Pet Food",
-  "Other"
+  "Other",
 ];
 
 // Placeholder image path
@@ -42,7 +42,7 @@ const ManualItemModal = () => {
   // Get today's date in YYYY-MM-DD format for default purchase date
   const getTodayDate = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   };
 
   const [formData, setFormData] = useState({
@@ -51,7 +51,7 @@ const ManualItemModal = () => {
     unit: "units",
     purchaseDate: getTodayDate(),
     expiryDate: "",
-    category: "Other"
+    category: "Other",
   });
 
   const handleChange = (e) => {
@@ -75,33 +75,35 @@ const ManualItemModal = () => {
   const addItemToPantry = async () => {
     if (!formData.title || !formData.amount) {
       // Show validation error using snackbar instead of alert
-      dispatch(addSnackbar({
-        message: "Please enter a product name and quantity",
-        severity: "error",
-      }));
+      dispatch(
+        addSnackbar({
+          message: "Please enter a product name and quantity",
+          severity: "error",
+        }),
+      );
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       // Generate a fake UPC for this manual entry
       const fakeUPC = generateFakeUPC();
-      
+
       // First, create a product entry with the fake UPC
       const productData = {
         productUPC: fakeUPC,
         productName: formData.title,
         productCategory: formData.category, // Use selected category
         productBrand: "Manual Entry",
-        productImages: [PLACEHOLDER_IMAGE] // Use placeholder image
+        productImages: [PLACEHOLDER_IMAGE], // Use placeholder image
       };
-      
+
       console.log("Creating product:", productData);
-      
+
       // Add the product to the database first
       await dispatch(addProduct(productData));
-      
+
       // Then add it to the pantry
       const pantryData = {
         productUPC: fakeUPC,
@@ -109,27 +111,31 @@ const ManualItemModal = () => {
         quantityType: formData.unit,
         date_purchased: formData.purchaseDate,
         expiration_date: formData.expiryDate,
-        isManualEntry: true // Flag to indicate this is a manual entry
+        isManualEntry: true, // Flag to indicate this is a manual entry
       };
-      
+
       console.log("Adding to pantry:", pantryData);
-      
+
       await dispatch(addToPantry(pantryData));
-      
+
       // Close the modal on success
       handleClose("manualItemModal");
-      
+
       // Show success message
-      dispatch(addSnackbar({
-        message: "Item added successfully",
-        severity: "success",
-      }));
+      dispatch(
+        addSnackbar({
+          message: "Item added successfully",
+          severity: "success",
+        }),
+      );
     } catch (error) {
       console.error("Failed to add item:", error);
-      dispatch(addSnackbar({
-        message: error.message || "Failed to add item",
-        severity: "error",
-      }));
+      dispatch(
+        addSnackbar({
+          message: error.message || "Failed to add item",
+          severity: "error",
+        }),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -139,102 +145,62 @@ const ManualItemModal = () => {
     dispatch(toggleModal(modal_id));
   };
 
-  // Common button style to ensure consistent sizing
-  const buttonStyle = {
-    width: '80px',
-    padding: '8px 16px',
-    fontSize: '16px'
-  };
-
-  // Specific styles for each button
-  const cancelButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: '#dc3545',
-    borderColor: '#dc3545',
-    color: 'white',
-    transition: 'background-color 0.2s ease'
-  };
-
-  // Hover state for cancel button
-  const handleCancelHover = (e, isHover) => {
-    e.target.style.backgroundColor = isHover ? '#c82333' : '#dc3545';
-    e.target.style.borderColor = isHover ? '#bd2130' : '#dc3545';
-  };
-
-  // Custom footer with our Button component
-  const renderFooter = () => (
-    <div style={{ display: 'flex', justifyContent: 'right', gap: '12px', marginTop: '1rem' }}>
-      <button 
-        className="btn"
-        onClick={() => handleClose("manualItemModal")}
-        disabled={isSubmitting}
-        style={cancelButtonStyle}
-        onMouseEnter={(e) => handleCancelHover(e, true)}
-        onMouseLeave={(e) => handleCancelHover(e, false)}
-      >
-        Cancel
-      </button>
-      <button 
-        className="btn btn-primary"
-        onClick={addItemToPantry}
-        disabled={isSubmitting}
-        style={buttonStyle}
-      >
-        {isSubmitting ? "Saving..." : "Save"}
-      </button>
-    </div>
-  );
-
-  // Custom styles for responsive modal
-  const modalStyles = {
-    width: '100%',
-    maxWidth: '800px', // Increased width for larger screens
-    margin: '0 auto'
-  };
-
   return (
     <Modal
       modal_id="manualItemModal"
       title="Add Item"
-      footerButtons={[]}
-      style={modalStyles}
+      buttons={[
+        {
+          text: "Cancel",
+          variant: "outlined",
+          onClick: () => handleClose("manualItemModal"),
+          disabled: isSubmitting,
+        },
+        {
+          text: isSubmitting ? "Saving..." : "Save",
+          variant: "contained",
+          onClick: addItemToPantry,
+          disabled: isSubmitting,
+        },
+      ]}
     >
-      <form className="product-form" style={{ width: '100%' }}>
-        <div className="text-center mb-4">
-          <img 
-            src={PLACEHOLDER_IMAGE} 
-            alt="Food placeholder" 
-            style={{ maxWidth: '150px', maxHeight: '150px' }}
-            className="img-thumbnail"
+      <form className="manual-item-form">
+        <div className="manual-item-image">
+          <img
+            src={PLACEHOLDER_IMAGE}
+            alt="Food placeholder"
+            className="manual-item-image-content"
           />
         </div>
 
-        <div className="form-group mb-3">
-          <label htmlFor="title" className="form-label">
-            Name <span className="text-danger">*</span>
+        <div className="manual-item-form-group">
+          <label htmlFor="title" className="manual-item-form-label">
+            Name <span className="manual-item-text-danger">*</span>
           </label>
           <input
             type="text"
             id="title"
             name="title"
-            className={`form-control ${!formData.title ? 'border-danger' : ''}`}
+            className={`manual-item-form-control ${!formData.title ? "manual-item-border-danger" : ""}`}
             value={formData.title}
             onChange={handleChange}
             required
           />
           {!formData.title && (
-            <small className="text-danger">Product name is required</small>
+            <small className="manual-item-text-danger">
+              Product name is required
+            </small>
           )}
         </div>
 
-        <div className="form-group mb-3">
-          <label htmlFor="category" className="form-label">
+        <div className="manual-item-form-group">
+          <label htmlFor="category" className="manual-item-form-label">
             Category
           </label>
           <select
             id="category"
             name="category"
-            className="form-select"
+            className="manual-item-form-select"
             value={formData.category}
             onChange={handleChange}
           >
@@ -246,16 +212,16 @@ const ManualItemModal = () => {
           </select>
         </div>
 
-        <div className="form-group mb-3">
-          <label htmlFor="amount" className="form-label">
-            Amount <span className="text-danger">*</span>
+        <div className="manual-item-form-group">
+          <label htmlFor="amount" className="manual-item-form-label">
+            Amount <span className="manual-item-text-danger">*</span>
           </label>
-          <div className="input-group">
+          <div className="manual-item-input-group">
             <input
               type="number"
               id="amount"
               name="amount"
-              className={`form-control ${!formData.amount ? 'border-danger' : ''}`}
+              className={`manual-item-form-control ${!formData.amount ? "manual-item-border-danger" : ""}`}
               value={formData.amount}
               onChange={handleChange}
               required
@@ -264,7 +230,7 @@ const ManualItemModal = () => {
               name="unit"
               value={formData.unit}
               onChange={handleChange}
-              className="form-select"
+              className="manual-item-form-select"
             >
               <option value="units">Units</option>
               <option value="g">Grams</option>
@@ -276,26 +242,28 @@ const ManualItemModal = () => {
             </select>
           </div>
           {!formData.amount && (
-            <small className="text-danger">Quantity is required</small>
+            <small className="manual-item-text-danger">
+              Quantity is required
+            </small>
           )}
         </div>
 
-        <div className="form-group mb-3">
-          <label htmlFor="purchaseDate" className="form-label">
+        <div className="manual-item-form-group">
+          <label htmlFor="purchaseDate" className="manual-item-form-label">
             Purchase Date
           </label>
           <input
             type="date"
             id="purchaseDate"
             name="purchaseDate"
-            className="form-control"
+            className="manual-item-form-control"
             value={formData.purchaseDate}
             onChange={handleChange}
           />
         </div>
 
-        <div className="form-group mb-3">
-          <label htmlFor="expiryDate" className="form-label">
+        <div className="manual-item-form-group">
+          <label htmlFor="expiryDate" className="manual-item-form-label">
             Expiry Date
             <Tooltip title="Enter the expiration date from the product packaging">
               <InfoIcon
@@ -308,13 +276,11 @@ const ManualItemModal = () => {
             type="date"
             id="expiryDate"
             name="expiryDate"
-            className="form-control"
+            className="manual-item-form-control"
             value={formData.expiryDate}
             onChange={handleChange}
           />
         </div>
-        
-        {renderFooter()}
       </form>
     </Modal>
   );

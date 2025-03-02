@@ -65,8 +65,6 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
           </>
         ) : (
           <>
-
-            
             <button className="login-button" onClick={handleSignIn}>
               Login
             </button>
