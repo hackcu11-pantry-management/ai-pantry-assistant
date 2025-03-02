@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { signup } from "../../redux/actions/userActions";
 import "./Auth.css";
 
 const SignUp = ({ setIsLoggedIn }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
-    name: "",
+    userFirstName: "",
+    userLastName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -28,7 +33,9 @@ const SignUp = ({ setIsLoggedIn }) => {
 
     // Basic validation
     if (
-      !formData.name ||
+      !formData.userFirstName ||
+      !formData.userLastName ||
+      !formData.username ||
       !formData.email ||
       !formData.password ||
       !formData.confirmPassword
@@ -51,33 +58,30 @@ const SignUp = ({ setIsLoggedIn }) => {
     }
 
     try {
-      // Mock registration - in a real app, this would be an API call
-      // Simulating API call with timeout
-      setTimeout(() => {
-        // For demo purposes, we'll accept any valid email format
-        if (formData.email.includes("@")) {
-          // Store user info in localStorage (this is just for demo purposes)
-          // In a real app, you would store a token and possibly user info
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              name: formData.name,
-              email: formData.email,
-            }),
-          );
+      // Prepare data for API call (exclude confirmPassword)
+      const signupData = {
+        userFirstName: formData.userFirstName,
+        userLastName: formData.userLastName,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      };
 
-          // Update auth state
-          setIsLoggedIn(true);
-
-          // Redirect to home page
-          navigate("/home", { state: { fromLogin: true } });
-        } else {
-          setError("Please enter a valid email address");
-        }
-        setLoading(false);
-      }, 1000);
+      // Call the signup action
+      const response = await dispatch(signup(signupData));
+      
+      if (response.success) {
+        // Update local auth state
+        setIsLoggedIn(true);
+        
+        // Redirect to home page
+        navigate("/home", { state: { fromLogin: true } });
+      } else {
+        setError(response.error || "Failed to create account");
+      }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError(err.message || "An error occurred. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
@@ -89,14 +93,38 @@ const SignUp = ({ setIsLoggedIn }) => {
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="name">Name</label>
+            <label htmlFor="userFirstName">First Name</label>
             <input
               type="text"
-              id="name"
-              name="name"
-              value={formData.name}
+              id="userFirstName"
+              name="userFirstName"
+              value={formData.userFirstName}
               onChange={handleChange}
-              placeholder="Enter your name"
+              placeholder="Enter your first name"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="userLastName">Last Name</label>
+            <input
+              type="text"
+              id="userLastName"
+              name="userLastName"
+              value={formData.userLastName}
+              onChange={handleChange}
+              placeholder="Enter your last name"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Choose a username"
               required
             />
           </div>

@@ -33,7 +33,7 @@ CREATE TABLE products (
 CREATE TABLE usersProducts (
     pantryID SERIAL PRIMARY KEY,
     userID INT NOT NULL,
-    productUPC INT NOT NULL,
+    productUPC BIGSERIAL NOT NULL,
     quantity FLOAT,
     quantityType VARCHAR(25),
     date_purchased DATE,
