@@ -162,7 +162,7 @@ def get_days_to_expire(product_data):
 def get_db_connection():
     try:
         conn = psycopg2.connect(
-            dbname=os.getenv('DB_NAME', 'pantryDatabase'),
+            dbname=os.getenv('DB_NAME', 'pantrydatabase'),
             user=os.getenv('DB_USER', 'postgres'),
             password=os.getenv('DB_PASSWORD', 'postgres'),
             host=os.getenv('DB_HOST', 'localhost'),
@@ -488,7 +488,21 @@ def lookup_upc():
                 "weight": product["productweight"],
                 "upc": product["productupc"]
             }
+
+            # Enrich the data with GPT category and days to expire
+            gptCategory = get_gpt_category(normalized_product)
+            daysToExpire = get_days_to_expire(normalized_product)
+            currentDate = datetime.now().strftime("%Y-%m-%d")
             
+            if daysToExpire == "n/a":
+                expiryDate_ = (datetime.strptime(currentDate, "%Y-%m-%d") + timedelta(days=730)).strftime("%Y-%m-%d")
+            else:
+                expiryDate_ = (datetime.strptime(currentDate, "%Y-%m-%d") + timedelta(days=int(daysToExpire))).strftime("%Y-%m-%d")
+            
+            normalized_product["category"] = gptCategory
+            normalized_product["expiryDate"] = expiryDate_
+            normalized_product["purchaseDate"] = currentDate
+
             return jsonify({
                 "success": True,
                 "source": "database",
