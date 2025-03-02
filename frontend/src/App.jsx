@@ -12,8 +12,11 @@ import { Navbar } from "./common";
 import LandingPage from "./pages/LandingPage/LandingPage";
 import ExamplePage from "./pages/ExamplePage";
 import HomePage from "./pages/HomePage/HomePage";
-import { SignIn, SignUp } from "./pages/Auth"; // Make sure this import is correct
+import { SignIn, SignUp } from "./pages/Auth";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
+
+import ModalProvider from "./ModalProvider";
+
 import Quagga from "quagga";
 
 import "./App.css";
@@ -153,10 +156,7 @@ function BarcodeScanner() {
             target: scannerRef.current,
           },
           decoder: {
-            readers: [
-              "upc_reader",
-              "upc_e_reader",
-            ],
+            readers: ["upc_reader", "upc_e_reader"],
           },
         },
         (err) => {
@@ -340,6 +340,7 @@ function App() {
 
   return (
     <Router>
+      <ModalProvider />
       <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
       <div className="app-container">
         <Routes>
