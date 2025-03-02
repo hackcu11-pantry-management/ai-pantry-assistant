@@ -156,3 +156,14 @@
     padding: 3rem;
     color: #666;
   }
+
+  .divider {
+    color:#a1a0a0;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+  }
+
+  .suggestion-primer {
+    font-size: large;
+    font-weight: 600;
+  }

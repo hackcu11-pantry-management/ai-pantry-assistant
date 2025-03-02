@@ -19,8 +19,12 @@ const LandingPage = () => {
     (state) => !!state.userState.loginResult?.token,
   );
   const authState = useSelector((state) => state.userState.loginResult);
-  const userFirstName = useSelector((state) => state.userState.loginResult?.userFirstName);
-  const pantryHeaderText = userFirstName ? `${userFirstName}'s Pantry` : "My Pantry";
+  const userFirstName = useSelector(
+    (state) => state.userState.loginResult?.userFirstName,
+  );
+  const pantryHeaderText = userFirstName
+    ? `${userFirstName}'s Pantry`
+    : "My Pantry";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [collapsedCategories, setCollapsedCategories] = useState({});
@@ -54,9 +58,9 @@ const LandingPage = () => {
 
   // Handle toggling category collapse
   const handleToggleCollapse = (category) => {
-    setCollapsedCategories(prev => ({
+    setCollapsedCategories((prev) => ({
       ...prev,
-      [category]: !prev[category]
+      [category]: !prev[category],
     }));
   };
 
@@ -72,7 +76,6 @@ const LandingPage = () => {
     // Open the edit modal
     handleOpenModal("editItemModal");
   };
-
 
   // Group pantry items by category
   const groupedPantryItems = pantryItems.reduce((acc, item) => {
@@ -150,12 +153,14 @@ const LandingPage = () => {
         ) : Object.keys(groupedPantryItems).length > 0 ? (
           Object.entries(groupedPantryItems).map(([category, items]) => (
             <div key={category}>
-              <DetailLine 
-                title={category} 
-                isCollapsed={collapsedCategories[category]} 
-                onToggleCollapse={() => handleToggleCollapse(category)} 
+              <DetailLine
+                title={category}
+                isCollapsed={collapsedCategories[category]}
+                onToggleCollapse={() => handleToggleCollapse(category)}
               />
-              <div className={`category-content ${collapsedCategories[category] ? 'collapsed' : 'expanded'}`}>
+              <div
+                className={`category-content ${collapsedCategories[category] ? "collapsed" : "expanded"}`}
+              >
                 <ProductGrid data={items} onItemClick={handleItemClick} />
               </div>
             </div>

@@ -153,7 +153,7 @@ def get_days_to_expire(product_data):
                 {"role": "system", "content": "You are a precise food expiration expert, creating data for analysis. You only respond with numbers or 'n/a'."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0,
+            temperature=0.7,
             max_tokens=10
         )
         return response.choices[0].message.content.strip()
@@ -663,8 +663,8 @@ def get_recipes():
             for item in pantry_items
         ])
 
-        prompt = f"""Based on these ingredients in my pantry, suggest 4 different recipes I could make. 
-The first two recipes should prioritize recipes that use ingredients with the earliest expiration dates, while maintaining recipe quality. The other two, don't need to prioritize expiration date.
+        prompt = f"""Based on these ingredients in my pantry, suggest 6 different recipes I could make. 
+The first three recipes should prioritize recipes that use ingredients with the earliest expiration dates, while maintaining recipe quality. The other three, don't need to prioritize expiration date.
 
 Here are my pantry items, sorted by expiration date (earliest first):
 {pantry_list}
@@ -678,7 +678,7 @@ For each recipe, provide the following information in EXACTLY this format:
 5. Cooking time: [Approximate cooking time]
 6. Urgency: [Either "Urgent" or "Not Urgent"]
 
-Now, suggest 4 recipes following the exact format above.
+Now, suggest 6 recipes following the exact format above.
 """
 
         # Use the new OpenAI client-based method
