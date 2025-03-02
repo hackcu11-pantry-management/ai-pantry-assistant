@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   BrowserRouter as Router,
@@ -19,6 +20,7 @@ import ForgotPassword from "./pages/Auth/ForgotPassword";
 import ModalProvider from "./ModalProvider";
 
 import "./App.css";
+import { logout } from "./redux/actions/userActions";
 
 // Development component that auto-logs in and redirects to home
 const DevAutoLogin = ({ setIsLoggedIn }) => {
@@ -36,17 +38,26 @@ const DevAutoLogin = ({ setIsLoggedIn }) => {
 function App() {
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const dispatch = useDispatch();
+  const loginResult = useSelector((state) => state.userState.loginResult);
 
   // Check for existing user session on app load
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
+    // If we have a loginResult from Redux, use that
+    if (loginResult) {
       setIsLoggedIn(true);
+    } else {
+      // Check localStorage as fallback
+      const user = localStorage.getItem("user");
+      if (user) {
+        setIsLoggedIn(true);
+      }
     }
-  }, []);
+  }, [loginResult]);
 
   // Handle logout
   const handleLogout = () => {
+    dispatch(logout());
     localStorage.removeItem("user");
     setIsLoggedIn(false);
   };

@@ -11,7 +11,7 @@ import { addSnackbar } from "./snackbarActions";
 /**
  * @function addLoginAuthentication
  * @description sets (replaces) userState.loginResults in store
- * @param {Array} results
+ * @param {Object} results
  */
 export const addLoginAuthentication = (results) => ({
   type: ADD_LOGIN_AUTHENTICATION,
@@ -21,7 +21,7 @@ export const addLoginAuthentication = (results) => ({
 /**
  * @function addUserPreferences
  * @description sets (replaces) userState.userPreferences in store
- * @param {Array} results
+ * @param {Object} results
  */
 export const addUserPreferences = (results) => ({
   type: ADD_USER_PREFERENCES,
@@ -29,88 +29,117 @@ export const addUserPreferences = (results) => ({
 });
 
 /**
- * @function getLoginAuthentication
- * @description Makes API call to get user authentication results.
- * @param {Object} loginForm
+ * @function login
+ * @description Makes API call to login a user
+ * @param {Object} loginData
  */
-export const getLoginAuthentication = (loginForm) => (dispatch) => {
-  const url = `${API_URL}/user/authenticate/login?username=${loginForm?.username ?? ""}&password=${loginForm?.password ?? ""}`;
+export const login = (loginData) => (dispatch) => {
+  const url = `${API_URL}/login`;
 
-  return basicAPI(url, "getUserLogin")
+  return basicAPI(url, "login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(loginData),
+  })
     .then((response) => {
-      dispatch(addLoginAuthentication(response?.data?.loginResult));
-      if (response?.data?.userPreferences) {
-        dispatch(addUserPreferences(response?.data?.userPreferences));
+      if (response.success) {
+        const userData = {
+          userID: response.userID,
+          token: response.token,
+          username: response.username,
+          userFirstName: response.userFirstName,
+          userLastName: response.userLastName,
+        };
+        dispatch(addLoginAuthentication(userData));
+        dispatch(
+          addSnackbar({
+            message: "Login successful",
+            severity: "success",
+          })
+        );
+      } else {
+        dispatch(
+          addSnackbar({
+            message: response.error || "Login failed",
+            severity: "error",
+          })
+        );
       }
       return response;
     })
-    .then((response) => {
+    .catch((error) => {
       dispatch(
         addSnackbar({
-          message: response?.message,
-          severity: response?.status === 200 ? "success" : "error",
-        }),
+          message: error.message || "Login failed",
+          severity: "error",
+        })
       );
-      return response;
-    })
-    .catch((error) => {
-      console.error("Error: ", error);
-      return error;
+      throw error;
     });
 };
 
 /**
- * @function registerUser
- * @description Makes API call to register user.
- * @param {Object} loginForm
+ * @function signup
+ * @description Makes API call to register a new user
+ * @param {Object} signupData
  */
-export const registerUser = (registerForm) => (dispatch) => {
-  const method = "POST";
-  const url = `${API_URL}/user/authenticate/register`;
+export const signup = (signupData) => (dispatch) => {
+  const url = `${API_URL}/signup`;
 
-  const fetchObj = {
-    method,
-    body: JSON.stringify(registerForm),
-  };
-
-  return basicAPI(url, "registerUser", fetchObj)
+  return basicAPI(url, "signup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(signupData),
+  })
     .then((response) => {
-      // render snackbars
-      if (response?.status === 200) {
+      if (response.success) {
+        const userData = {
+          userID: response.userID,
+          token: response.token,
+          username: response.username,
+        };
+        dispatch(addLoginAuthentication(userData));
         dispatch(
           addSnackbar({
-            message: response?.message,
+            message: "Signup successful",
             severity: "success",
-          }),
+          })
         );
-        return response;
-      }
-      // TODO: replace error snackbars with form validation!
-      //       also make sure that we enforce user and password lengths
-      if (response?.data?.code === "23505") {
+      } else {
         dispatch(
           addSnackbar({
-            message: "Username taken. Register with a different username.",
+            message: response.error || "Signup failed",
             severity: "error",
-          }),
+          })
         );
-        return response;
       }
-      if (response?.data?.code === "22001") {
-        dispatch(
-          addSnackbar({
-            message: "Username cannot be larger than 50 characters.",
-            severity: "error",
-          }),
-        );
-        return response;
-      }
-
       return response;
     })
     .catch((error) => {
-      // server error
-      console.error("Error: ", error);
-      return error;
+      dispatch(
+        addSnackbar({
+          message: error.message || "Signup failed",
+          severity: "error",
+        })
+      );
+      throw error;
     });
+};
+
+/**
+ * @function logout
+ * @description Logs out the user by clearing the authentication state
+ */
+export const logout = () => (dispatch) => {
+  dispatch(addLoginAuthentication(null));
+  dispatch(
+    addSnackbar({
+      message: "Logged out successfully",
+      severity: "success",
+    })
+  );
 };

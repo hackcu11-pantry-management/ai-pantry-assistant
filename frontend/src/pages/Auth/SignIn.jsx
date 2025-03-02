@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { login } from "../../redux/actions/userActions";
 import "./Auth.css";
 
 const SignIn = ({ setIsLoggedIn }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -32,33 +35,21 @@ const SignIn = ({ setIsLoggedIn }) => {
     }
 
     try {
-      // Mock authentication - in a real app, this would be an API call
-      // Simulating API call with timeout
-      setTimeout(() => {
-        // For demo purposes, we'll accept any email with a valid format and password length > 5
-        if (formData.email.includes("@") && formData.password.length > 5) {
-          // Store user info in localStorage (this is just for demo purposes)
-          // In a real app, you would store a token and possibly user info
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              email: formData.email,
-              name: formData.email.split("@")[0], // Use part of email as name for demo
-            }),
-          );
-
-          // Update auth state
-          setIsLoggedIn(true);
-
-          // Redirect to home page
-          navigate("/home", { state: { fromLogin: true } });
-        } else {
-          setError("Invalid email or password");
-        }
-        setLoading(false);
-      }, 1000);
+      // Call the login action
+      const response = await dispatch(login(formData));
+      
+      if (response.success) {
+        // Update local auth state
+        setIsLoggedIn(true);
+        
+        // Redirect to home page
+        navigate("/home", { state: { fromLogin: true } });
+      } else {
+        setError(response.error || "Invalid email or password");
+      }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError(err.message || "An error occurred. Please try again.");
+    } finally {
       setLoading(false);
     }
   };

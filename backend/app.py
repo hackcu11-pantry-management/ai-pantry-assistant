@@ -6,8 +6,11 @@ from psycopg2.extras import RealDictCursor
 import os
 from dotenv import load_dotenv
 import openai
-import time
+import bcrypt
+import jwt as pyjwt
 from datetime import datetime, timedelta
+from functools import wraps
+import time
 
 load_dotenv()
 
@@ -22,6 +25,10 @@ RATE_LIMIT_REQUESTS = 2  # requests per second
 RATE_LIMIT_WINDOW = 1  # second
 last_request_time = None
 request_count = 0
+
+# JWT Secret Key
+JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key')
+JWT_EXPIRATION_HOURS = 24
 
 # Predefined food categories
 FOOD_CATEGORIES = [
@@ -49,13 +56,72 @@ FOOD_CATEGORIES = [
 CORS(app, 
      resources={
          r"/*": {
-             "origins": ["http://localhost:3000"],
-             "methods": ["GET","POST", "OPTIONS"],
-             "allow_headers": ["Content-Type", "Accept"],
+             "origins": ["*"],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Accept", "Authorization"],
              "max_age": 3600
          }
      })
 
+# Authentication decorator
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        auth_header = request.headers.get('Authorization')
+        
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+            
+        if not token:
+            return jsonify({
+                'success': False,
+                'error': 'Authentication token is missing',
+                'status': 'AUTH_ERROR'
+            }), 401
+            
+        try:
+            data = pyjwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            current_user_id = data['user_id']
+            
+            # Verify user exists in database
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({
+                    'success': False,
+                    'error': 'Database connection failed',
+                    'status': 'DB_ERROR'
+                }), 503
+            
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM users WHERE userID = %s", (current_user_id,))
+            user = cur.fetchone()
+            cur.close()
+            conn.close()
+            
+            if not user:
+                return jsonify({
+                    'success': False,
+                    'error': 'User not found',
+                    'status': 'AUTH_ERROR'
+                }), 401
+                
+        except pyjwt.ExpiredSignatureError:
+            return jsonify({
+                'success': False,
+                'error': 'Authentication token has expired',
+                'status': 'AUTH_ERROR'
+            }), 401
+        except pyjwt.InvalidTokenError:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid authentication token',
+                'status': 'AUTH_ERROR'
+            }), 401
+            
+        return f(current_user_id, *args, **kwargs)
+    
+    return decorated
 
 def get_days_to_expire(product_data):
     """Get the days to expire for a product
@@ -92,8 +158,6 @@ def get_days_to_expire(product_data):
     except Exception as e:
         print(f"Error getting days to expire: {e}")
         return "n/a"  # Fail safe default
-
-
 
 def get_db_connection():
     try:
@@ -622,6 +686,675 @@ Respond with ONLY valid JSON, no explanation or additional text.
             "status": "SERVER_ERROR",
             "details": str(e)
         }), 500
+
+# User Authentication Endpoints
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    try:
+        data = request.get_json()
+        print("Received data:", data)
+        
+        # Validate required fields
+        required_fields = ['userFirstName', 'userLastName', 'username', 'email', 'password']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'success': False,
+                    'error': f'{field} is required',
+                    'status': 'VALIDATION_ERROR'
+                }), 400
+        
+        userFirstName = data['userFirstName']
+        userLastName = data['userLastName']
+        username = data['username']
+        email = data['email']
+        password = data['password']
+        
+        # Check if user already exists
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE email = %s OR username = %s", (email, username))
+        existing_user = cur.fetchone()
+        
+        if existing_user:
+            cur.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'User with this email or username already exists',
+                'status': 'DUPLICATE_USER'
+            }), 409
+        
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Insert new user - FIX: Correct column order to match table definition
+        cur.execute(
+            "INSERT INTO users (userLastName, userFirstName, username, email, password_hash) VALUES (%s, %s, %s, %s, %s) RETURNING userID",
+            (userLastName, userFirstName, username, email, hashed_password)
+        )
+        user_id = cur.fetchone()[0]
+        conn.commit()
+        
+        # Generate JWT token
+        token = pyjwt.encode({
+            'user_id': user_id,
+            'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+        }, JWT_SECRET, algorithm="HS256")
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'userID': user_id,
+            'token': token,
+            'username': username
+        })
+        
+    except Exception as e:
+        print(f"Signup error: {str(e)}")  # Add detailed logging
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data or 'email' not in data or 'password' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Email and password are required',
+                'status': 'VALIDATION_ERROR'
+            }), 400
+        
+        email = data['email']
+        password = data['password']
+        
+        # Get user from database
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor()
+        cur.execute("SELECT userID, username, password_hash FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
+        
+        # Check if user exists and password is correct
+        if not user or not bcrypt.checkpw(password.encode('utf-8'), user[2].encode('utf-8')):
+            cur.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'Invalid email or password',
+                'status': 'INVALID_CREDENTIALS'
+            }), 401
+        
+        user_id = user[0]
+        username = user[1]
+        
+        # Generate JWT token - FIX: Use pyjwt instead of jwt
+        token = pyjwt.encode({
+            'user_id': user_id,
+            'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+        }, JWT_SECRET, algorithm="HS256")
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'userID': user_id,
+            'token': token,
+            'username': username
+        })
+        
+    except Exception as e:
+        print(f"Login error: {str(e)}")  # Add detailed logging
+        import traceback
+        traceback.print_exc()  # Print the full stack trace
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+
+# Product Management Endpoints
+@app.route('/api/products', methods=['POST'])
+@token_required
+def add_product(current_user_id):
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        if 'productUPC' not in data or not data['productUPC']:
+            return jsonify({
+                'success': False,
+                'error': 'Product UPC is required',
+                'status': 'VALIDATION_ERROR'
+            }), 400
+            
+        if 'productName' not in data or not data['productName']:
+            return jsonify({
+                'success': False,
+                'error': 'Product name is required',
+                'status': 'VALIDATION_ERROR'
+            }), 400
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if product already exists
+        cur.execute("SELECT * FROM products WHERE productUPC = %s", (data['productUPC'],))
+        existing_product = cur.fetchone()
+        
+        if existing_product:
+            # Update existing product
+            update_fields = []
+            update_values = []
+            
+            # Build dynamic update query based on provided fields
+            for key, value in data.items():
+                if key != 'productUPC':  # Skip the UPC as it's the identifier
+                    update_fields.append(f"{key} = %s")
+                    update_values.append(value)
+            
+            update_values.append(data['productUPC'])  # Add UPC for WHERE clause
+            
+            update_query = f"""
+                UPDATE products 
+                SET {', '.join(update_fields)}
+                WHERE productUPC = %s
+                RETURNING *
+            """
+            
+            cur.execute(update_query, update_values)
+            
+        else:
+            # Insert new product
+            fields = []
+            placeholders = []
+            values = []
+            
+            for key, value in data.items():
+                fields.append(key)
+                placeholders.append("%s")
+                values.append(value)
+            
+            insert_query = f"""
+                INSERT INTO products ({', '.join(fields)})
+                VALUES ({', '.join(placeholders)})
+                RETURNING *
+            """
+            
+            cur.execute(insert_query, values)
+        
+        product = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'product': product
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+
+
+@app.route('/api/products/<int:product_upc>', methods=['GET'])
+@token_required
+def get_product_by_upc(current_user_id, product_upc):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor()
+        
+        # Query to get product by UPC
+        cur.execute("""
+            SELECT 
+                productUPC, 
+                productName, 
+                productDescription, 
+                productBrand, 
+                productModel, 
+                productColor, 
+                productSize, 
+                productDimension, 
+                productWeight, 
+                productCategory, 
+                productLowestPrice, 
+                productHighestPrice, 
+                productCurrency, 
+                productImages
+            FROM products 
+            WHERE productUPC = %s
+        """, (product_upc,))
+        
+        product = cur.fetchone()
+        
+        if not product:
+            cur.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'Product not found',
+                'status': 'NOT_FOUND'
+            }), 404
+        
+        # Format product data
+        product_data = {
+            'productUPC': product[0],
+            'productName': product[1],
+            'productDescription': product[2],
+            'productBrand': product[3],
+            'productModel': product[4],
+            'productColor': product[5],
+            'productSize': product[6],
+            'productDimension': product[7],
+            'productWeight': product[8],
+            'productCategory': product[9],
+            'productLowestPrice': float(product[10]) if product[10] is not None else None,
+            'productHighestPrice': float(product[11]) if product[11] is not None else None,
+            'productCurrency': product[12],
+            'productImages': product[13] if product[13] else []
+        }
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'product': product_data
+        })
+        
+    except Exception as e:
+        print(f"Error getting product by UPC: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+# User Products Endpoints
+@app.route('/api/pantry', methods=['POST'])
+@token_required
+def add_to_pantry(current_user_id):
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['productUPC', 'quantity']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False,
+                    'error': f'{field} is required',
+                    'status': 'VALIDATION_ERROR'
+                }), 400
+        
+        product_upc = data['productUPC']
+        quantity = data['quantity']
+        quantity_type = data.get('quantityType', 'items')  # Default to 'items' if not provided
+        date_purchased = data.get('date_purchased')
+        expiration_date = data.get('expiration_date')
+        
+        # Connect to database
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor()
+        
+        # First, check if the product exists
+        cur.execute("SELECT productUPC FROM products WHERE productUPC = %s", (product_upc,))
+        product = cur.fetchone()
+        
+        if not product:
+            cur.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'Product not found',
+                'status': 'NOT_FOUND'
+            }), 404
+        
+        # Insert into usersProducts (not pantry)
+        cur.execute("""
+            INSERT INTO usersProducts 
+            (userID, productUPC, quantity, quantityType, date_purchased, expiration_date) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING pantryID
+        """, (current_user_id, product_upc, quantity, quantity_type, date_purchased, expiration_date))
+        
+        # Get the newly created pantry item ID
+        new_pantry_id = cur.fetchone()[0]
+        conn.commit()
+        
+        # Get the complete pantry item details
+        cur.execute("""
+            SELECT 
+                up.pantryID, 
+                up.userID, 
+                up.productUPC, 
+                up.quantity, 
+                up.quantityType, 
+                up.date_purchased, 
+                up.expiration_date,
+                p.productName,
+                p.productBrand
+            FROM usersProducts up
+            JOIN products p ON up.productUPC = p.productUPC
+            WHERE up.pantryID = %s
+        """, (new_pantry_id,))
+        
+        pantry_item = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not pantry_item:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to retrieve added pantry item',
+                'status': 'SERVER_ERROR'
+            }), 500
+        
+        # Format the response
+        pantry_data = {
+            'pantryID': pantry_item[0],
+            'userID': pantry_item[1],
+            'productUPC': pantry_item[2],
+            'quantity': pantry_item[3],
+            'quantityType': pantry_item[4],
+            'date_purchased': pantry_item[5].isoformat() if pantry_item[5] else None,
+            'expiration_date': pantry_item[6].isoformat() if pantry_item[6] else None,
+            'productName': pantry_item[7],
+            'productBrand': pantry_item[8]
+        }
+        
+        return jsonify({
+            'success': True,
+            'message': 'Product added to pantry successfully',
+            'pantryItem': pantry_data
+        })
+        
+    except Exception as e:
+        print(f"Error adding to pantry: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+
+@app.route('/api/pantry/<int:pantry_id>', methods=['PUT'])
+@token_required
+def update_pantry_item(current_user_id, pantry_id):
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No update data provided',
+                'status': 'VALIDATION_ERROR'
+            }), 400
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Verify pantry item exists and belongs to user
+        cur.execute(
+            "SELECT * FROM usersProducts WHERE pantryID = %s AND userID = %s",
+            (pantry_id, current_user_id)
+        )
+        pantry_item = cur.fetchone()
+        
+        if not pantry_item:
+            cur.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'Pantry item not found or does not belong to user',
+                'status': 'NOT_FOUND'
+            }), 404
+        
+        # Build update query
+        update_fields = []
+        update_values = []
+        
+        for key, value in data.items():
+            if key in ['quantity', 'quantityType', 'expiration_date', 'date_purchased']:
+                update_fields.append(f"{key} = %s")
+                update_values.append(value)
+        
+        if not update_fields:
+            cur.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'No valid fields to update',
+                'status': 'VALIDATION_ERROR'
+            }), 400
+        
+        # Add pantry_id for WHERE clause
+        update_values.append(pantry_id)
+        
+        update_query = f"""
+            UPDATE usersProducts 
+            SET {', '.join(update_fields)}
+            WHERE pantryID = %s
+            RETURNING *
+        """
+        
+        cur.execute(update_query, update_values)
+        updated_item = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'pantry_item': updated_item
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+
+@app.route('/api/pantry/<int:pantry_id>', methods=['DELETE'])
+@token_required
+def remove_from_pantry(current_user_id, pantry_id):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor()
+        
+        # Verify pantry item exists and belongs to user
+        cur.execute(
+            "SELECT * FROM usersProducts WHERE pantryID = %s AND userID = %s",
+            (pantry_id, current_user_id)
+        )
+        pantry_item = cur.fetchone()
+        
+        if not pantry_item:
+            cur.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'Pantry item not found or does not belong to user',
+                'status': 'NOT_FOUND'
+            }), 404
+        
+        # Delete the pantry item
+        cur.execute(
+            "DELETE FROM usersProducts WHERE pantryID = %s",
+            (pantry_id,)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Item removed from pantry'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+
+@app.route('/api/pantry', methods=['GET'])
+@token_required
+def get_user_pantry(current_user_id):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get all pantry items for the user with product details
+        cur.execute("""
+            SELECT up.*, p.productName, p.productBrand, p.productCategory, p.productImages
+            FROM usersProducts up
+            JOIN products p ON up.productUPC = p.productUPC
+            WHERE up.userID = %s
+            ORDER BY up.date_purchased DESC
+        """, (current_user_id,))
+        
+        pantry_items = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'pantry_items': pantry_items
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+
+@app.route('/api/pantry/product/<product_upc>', methods=['GET'])
+@token_required
+def get_pantry_item_by_upc(current_user_id, product_upc):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'error': 'Database connection failed',
+                'status': 'DB_ERROR'
+            }), 503
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get pantry item for the user with specific UPC
+        cur.execute("""
+            SELECT up.*, p.productName, p.productBrand, p.productCategory, p.productImages
+            FROM usersProducts up
+            JOIN products p ON up.productUPC = p.productUPC
+            WHERE up.userID = %s AND up.productUPC = %s
+        """, (current_user_id, product_upc))
+        
+        pantry_item = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not pantry_item:
+            return jsonify({
+                'success': False,
+                'error': 'Product not found in user pantry',
+                'status': 'NOT_FOUND'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'pantry_item': pantry_item
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
+
+
 
 if __name__ == '__main__':
     # Run on port 5001 to avoid conflicts
