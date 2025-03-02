@@ -48,7 +48,7 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <Link to="/pantry">AI Pantry Assistant</Link>
+        <Link to="/pantry">PantryPal</Link>
       </div>
       <div className="navbar-links">
         {isLoggedIn ? (

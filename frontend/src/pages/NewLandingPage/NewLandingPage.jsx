@@ -95,7 +95,7 @@ export default function ScrollLinked() {
           color: "white",
           textShadow: "4px 4px 8px rgba(0, 0, 0, 0.8)" // Added text shadow
         }}>
-          Welcome to PantryAI
+          Welcome to PantryPal
         </h1>
         <p style={{ 
           fontSize: "1.2rem", 
