@@ -5,6 +5,7 @@ import Quagga from "quagga";
 import { useDispatch } from "react-redux";
 import { selectProduct } from "../../redux/actions/productActions";
 import { toggleModal } from "../../redux/actions/modalActions";
+import { addSnackbar } from "../../redux/actions/snackbarActions";
 
 const BarcodeScanner = () => {
   const dispatch = useDispatch();
@@ -32,7 +33,12 @@ const BarcodeScanner = () => {
     const cleanedUPC = cleanUPC(upc);
     if (!isValidUPC(cleanedUPC)) {
       setError("Invalid UPC code format. Please try scanning again.");
+      dispatch(addSnackbar({
+        message: "Invalid UPC code format. Please try scanning again.",
+        severity: "warning"
+      }));
       setIsLoading(false);
+      startScanner(); // Restart scanner on invalid UPC
       return;
     }
 
@@ -80,7 +86,13 @@ const BarcodeScanner = () => {
         dispatch(toggleModal("reviewItemModal"));
       })
       .catch((err) => {
-        setError(`Error looking up product: ${err.message}`);
+        const errorMessage = `Error looking up product: ${err.message}`;
+        setError(errorMessage);
+        dispatch(addSnackbar({
+          message: errorMessage,
+          severity: "error"
+        }));
+        startScanner(); // Restart scanner on API error
       })
       .finally(() => {
         setIsLoading(false);
@@ -106,6 +118,11 @@ const BarcodeScanner = () => {
 
   const startScanner = () => {
     setError(null);
+
+    // If scanner is already initialized, stop it first
+    if (quaggaInitialized.current) {
+      stopScanner();
+    }
 
     if (!scannerRef.current) {
       setError("Scanner element not found");
@@ -133,9 +150,12 @@ const BarcodeScanner = () => {
             Quagga.onDetected(onDetected);
           } else {
             console.error("Quagga initialization failed:", err);
-            setError(
-              `Failed to initialize scanner: ${err.message || "Unknown error"}`,
-            );
+            const errorMessage = `Failed to initialize scanner: ${err.message || "Unknown error"}`;
+            setError(errorMessage);
+            dispatch(addSnackbar({
+              message: errorMessage,
+              severity: "error"
+            }));
           }
         },
       );
@@ -171,6 +191,21 @@ const BarcodeScanner = () => {
           style={{ color: "red", margin: "10px 0" }}
         >
           {error}
+          <button 
+            onClick={startScanner}
+            style={{
+              display: "block",
+              margin: "10px auto",
+              padding: "8px 16px",
+              backgroundColor: "#4CAF50",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer"
+            }}
+          >
+            Try Again
+          </button>
         </div>
       )}
 
