@@ -74,8 +74,6 @@ function App() {
 
           {/* Protected routes */}
           <Route path="/home" element={<HomePage />} />
-
-          <Route path="/scan" element={<BarcodeScanner />} />
           <Route path="/recipes" element={<RecipePage />} />
 
           {/* Development routes */}
