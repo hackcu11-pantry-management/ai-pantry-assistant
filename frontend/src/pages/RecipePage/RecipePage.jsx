@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./RecipePage.css";
+import PizzaImageLoadingScreen from "../../PizzaLoader/PizzaImageLoadingScreen";
 
 const RecipePage = () => {
   const [recipes, setRecipes] = useState([]);
@@ -96,10 +97,7 @@ const RecipePage = () => {
       {error && <div className="error-message">{error}</div>}
 
       {isLoading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Finding delicious recipes for you...</p>
-        </div>
+        <PizzaImageLoadingScreen />
       ) : recipes.length > 0 ? (
         <div className="recipe-grid">
           {recipes.map((recipe, index) => (
