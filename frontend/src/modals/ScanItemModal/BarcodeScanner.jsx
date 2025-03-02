@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Quagga from "quagga";
 import { useDispatch } from "react-redux";
+import { API_URL } from "../../data/constants";
 import { selectProduct } from "../../redux/actions/productActions";
 import { toggleModal } from "../../redux/actions/modalActions";
 import { addSnackbar } from "../../redux/actions/snackbarActions";
