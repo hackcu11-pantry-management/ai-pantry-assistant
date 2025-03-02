@@ -16,7 +16,8 @@ const LandingPage = () => {
     (state) => !!state.userState.loginResult?.token,
   );
   const authState = useSelector((state) => state.userState.loginResult);
-
+  const userFirstName = useSelector((state) => state.userState.loginResult?.userFirstName);
+  const pantryHeaderText = userFirstName ? `${userFirstName}'s Pantry` : "My Pantry";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [collapsedCategories, setCollapsedCategories] = useState({});
@@ -69,6 +70,7 @@ const LandingPage = () => {
     handleOpenModal("editItemModal");
   };
 
+
   // Group pantry items by category
   const groupedPantryItems = pantryItems.reduce((acc, item) => {
     const category = item.productcategory || "Other";
@@ -113,7 +115,7 @@ const LandingPage = () => {
     <div className="page-container">
       <Card>
         <CardHeader
-          text="Pantry Items"
+          text={pantryHeaderText}
           buttons={[
             {
               text: "Scan Item",
