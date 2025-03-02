@@ -9,6 +9,7 @@ import { setRecipes } from "../../redux/actions/recipeActions";
 import { Button, CircularProgress, Snackbar, Alert } from "@mui/material";
 import { updatePantryItems } from "../../redux/actions/productActions";
 import { API_URL } from "../../data/constants";
+
 const RecipePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();

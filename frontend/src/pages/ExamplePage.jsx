@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { API_URL } from "../../data/constants";
+import { API_URL } from "../data/constants";
 const ExamplePage = () => {
   const [upc, setUpc] = useState("");
   const [result, setResult] = useState(null);
