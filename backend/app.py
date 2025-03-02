@@ -21,7 +21,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 GOUPC_API_KEY = os.getenv('GOUPC_API_KEY')
 
 # Rate limiting configuration for Go-UPC API (2 requests per second)
-RATE_LIMIT_REQUESTS = 2  # requests per second
+RATE_LIMIT_REQUESTS = 1  # requests per second
 RATE_LIMIT_WINDOW = 1  # second
 last_request_time = None
 request_count = 0
@@ -320,6 +320,10 @@ def call_upc_api(upc):
     """Call the Go-UPC API with rate limiting"""
     global last_request_time, request_count
     
+    if not GOUPC_API_KEY:
+        print("Error: GOUPC_API_KEY not found in environment variables")
+        return None
+    
     current_time = time.time()
     
     # Reset counter if window has passed
@@ -333,13 +337,17 @@ def call_upc_api(upc):
             time.sleep(wait_time)
             request_count = 0
     
-    # Make the API call
-    url = f'https://go-upc.com/api/v1/code/{upc}'
+    # Make the API call - try both authentication methods
+    base_url = 'https://go-upc.com/api/v1/code'
+    
+    # First try with query parameter
     try:
+        url = f'{base_url}/{upc}?key={GOUPC_API_KEY}'
+        print(f"Attempting API call to: {url}")  # Debug log
+        
         response = requests.get(
             url,
             headers={
-                'Authorization': f'Bearer {GOUPC_API_KEY}',
                 'Accept': 'application/json'
             },
             timeout=10
@@ -349,6 +357,11 @@ def call_upc_api(upc):
         last_request_time = time.time()
         request_count += 1
         
+        # Log the response for debugging
+        print(f"API Response Status: {response.status_code}")
+        if response.status_code != 200:
+            print(f"API Error Response: {response.text}")
+        
         if response.status_code == 429:
             # If rate limited, wait and retry once
             time.sleep(RATE_LIMIT_WINDOW)
@@ -357,17 +370,41 @@ def call_upc_api(upc):
             response = requests.get(
                 url,
                 headers={
+                    'Accept': 'application/json'
+                },
+                timeout=10
+            )
+            print(f"Retry Response Status: {response.status_code}")
+        
+        return response
+        
+    except requests.exceptions.RequestException as e:
+        print(f"API request error with query parameter method: {e}")
+        
+        # Try with Bearer token as fallback
+        try:
+            url = f'{base_url}/{upc}'
+            print(f"Attempting API call with Bearer token to: {url}")  # Debug log
+            
+            response = requests.get(
+                url,
+                headers={
                     'Authorization': f'Bearer {GOUPC_API_KEY}',
                     'Accept': 'application/json'
                 },
                 timeout=10
             )
-        
-        return response
-        
-    except requests.exceptions.RequestException as e:
-        print(f"API request error: {e}")
-        return None
+            
+            # Log the response for debugging
+            print(f"Bearer token API Response Status: {response.status_code}")
+            if response.status_code != 200:
+                print(f"Bearer token API Error Response: {response.text}")
+            
+            return response
+            
+        except requests.exceptions.RequestException as e:
+            print(f"API request error with Bearer token method: {e}")
+            return None
 
 def validate_upc(upc):
     """Validate UPC format"""
@@ -493,12 +530,23 @@ def lookup_upc():
         
         # If API found the product, save it to our database
         if api_data.get('product'):
+            gptCategory = get_gpt_category(api_data['product'])
+            currentDate = datetime.now().strftime("%Y-%m-%d")
+            daysToExpire = get_days_to_expire(api_data['product'])
+            
+            # Handle non-perishable items
+            if daysToExpire == "n/a":
+                # Set expiry date to 2 years from now for non-perishable items
+                expiryDate_ = (datetime.strptime(currentDate, "%Y-%m-%d") + timedelta(days=730)).strftime("%Y-%m-%d")
+            else:
+                expiryDate_ = (datetime.strptime(currentDate, "%Y-%m-%d") + timedelta(days=int(daysToExpire))).strftime("%Y-%m-%d")
+            
             # Transform Go-UPC response format to our format
             product_data = {
                 'upc': api_data.get('code'),
                 'title': api_data['product'].get('name'),
                 'brand': api_data['product'].get('brand'),
-                'category': api_data['product'].get('category'),
+                'category': gptCategory,
                 'description': api_data['product'].get('description'),
                 'images': [api_data['product'].get('imageUrl')] if api_data['product'].get('imageUrl') else [],
                 'model': '',  # Not provided by Go-UPC
@@ -508,7 +556,9 @@ def lookup_upc():
                 'weight': next((spec[1] for spec in api_data['product'].get('specs', []) if 'weight' in spec[0].lower()), ''),
                 'lowest_recorded_price': 0.0,  # Not provided by Go-UPC
                 'highest_recorded_price': 0.0,  # Not provided by Go-UPC
-                'currency': 'USD'  # Default currency
+                'currency': 'USD',  # Default currency
+                'purchaseDate': currentDate,
+                'expiryDate': expiryDate_,
             }
             
             print(f"Transformed product data: {product_data}")  # Debug log
