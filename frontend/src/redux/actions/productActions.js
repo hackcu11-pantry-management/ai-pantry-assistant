@@ -79,7 +79,8 @@ export const addProduct = (productData) => (dispatch, getState) => {
  * @param {Object} pantryData
  */
 export const addToPantry = (pantryData) => (dispatch, getState) => {
-  const token = getState().userState.loginResult?.token;
+  const userState = getState().userState;
+  const token = userState.loginResult?.token;
 
   if (!token) {
     dispatch(
@@ -92,12 +93,14 @@ export const addToPantry = (pantryData) => (dispatch, getState) => {
   }
 
   const url = `${API_URL}/pantry`;
+  const authHeader = `Bearer ${token}`;
 
   return basicAPI(url, "addToPantry", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      "Authorization": authHeader,
+      "Accept": "application/json"
     },
     body: JSON.stringify(pantryData),
   })
@@ -111,12 +114,21 @@ export const addToPantry = (pantryData) => (dispatch, getState) => {
       return response;
     })
     .catch((error) => {
-      dispatch(
-        addSnackbar({
-          message: error.message || "Failed to add product to pantry",
-          severity: "error",
-        }),
-      );
+      if (error.status === 401) {
+        dispatch(
+          addSnackbar({
+            message: "Authentication failed. Please log in again.",
+            severity: "error",
+          }),
+        );
+      } else {
+        dispatch(
+          addSnackbar({
+            message: error.message || "Failed to add product to pantry",
+            severity: "error",
+          }),
+        );
+      }
       throw error;
     });
 };
@@ -199,7 +211,8 @@ export const getUserPantry = () => (dispatch, getState) => {
  */
 export const updatePantryItem =
   (pantryId, updateData) => (dispatch, getState) => {
-    const token = getState().userState.loginResult?.token;
+    const userState = getState().userState;
+    const token = userState.loginResult?.token;
 
     if (!token) {
       dispatch(
@@ -212,12 +225,14 @@ export const updatePantryItem =
     }
 
     const url = `${API_URL}/pantry/${pantryId}`;
+    const authHeader = `Bearer ${token}`;
 
     return basicAPI(url, "updatePantryItem", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        "Authorization": authHeader,
+        "Accept": "application/json"
       },
       body: JSON.stringify(updateData),
     })
@@ -233,12 +248,21 @@ export const updatePantryItem =
         return response;
       })
       .catch((error) => {
-        dispatch(
-          addSnackbar({
-            message: error.message || "Failed to update pantry item",
-            severity: "error",
-          }),
-        );
+        if (error.status === 401) {
+          dispatch(
+            addSnackbar({
+              message: "Authentication failed. Please log in again.",
+              severity: "error",
+            }),
+          );
+        } else {
+          dispatch(
+            addSnackbar({
+              message: error.message || "Failed to update pantry item",
+              severity: "error",
+            }),
+          );
+        }
         throw error;
       });
   };
@@ -249,7 +273,8 @@ export const updatePantryItem =
  * @param {number} pantryId
  */
 export const removePantryItem = (pantryId) => (dispatch, getState) => {
-  const token = getState().userState.loginResult?.token;
+  const userState = getState().userState;
+  const token = userState.loginResult?.token;
 
   if (!token) {
     dispatch(
@@ -262,11 +287,13 @@ export const removePantryItem = (pantryId) => (dispatch, getState) => {
   }
 
   const url = `${API_URL}/pantry/${pantryId}`;
+  const authHeader = `Bearer ${token}`;
 
   return basicAPI(url, "removePantryItem", {
     method: "DELETE",
     headers: {
-      Authorization: `Bearer ${token}`,
+      "Authorization": authHeader,
+      "Accept": "application/json"
     },
   })
     .then((response) => {
@@ -281,12 +308,21 @@ export const removePantryItem = (pantryId) => (dispatch, getState) => {
       return response;
     })
     .catch((error) => {
-      dispatch(
-        addSnackbar({
-          message: error.message || "Failed to remove pantry item",
-          severity: "error",
-        }),
-      );
+      if (error.status === 401) {
+        dispatch(
+          addSnackbar({
+            message: "Authentication failed. Please log in again.",
+            severity: "error",
+          }),
+        );
+      } else {
+        dispatch(
+          addSnackbar({
+            message: error.message || "Failed to remove pantry item",
+            severity: "error",
+          }),
+        );
+      }
       throw error;
     });
 };
@@ -299,7 +335,8 @@ export const removePantryItem = (pantryId) => (dispatch, getState) => {
  */
 export const getPantryIdByUserAndProduct =
   (userId, productUpc) => (dispatch, getState) => {
-    const token = getState().userState.loginResult?.token;
+    const userState = getState().userState;
+    const token = userState.loginResult?.token;
 
     if (!token) {
       dispatch(
@@ -312,19 +349,34 @@ export const getPantryIdByUserAndProduct =
     }
 
     const url = `${API_URL}/pantry/user/${userId}/product/${productUpc}`;
+    const authHeader = `Bearer ${token}`;
 
     return basicAPI(url, "getPantryIdByUserAndProduct", {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Authorization": authHeader,
+        "Accept": "application/json"
       },
-    }).catch((error) => {
-      dispatch(
-        addSnackbar({
-          message: error.message || "Failed to get pantry information",
-          severity: "error",
-        }),
-      );
+    })
+    .then(response => {
+      return response;
+    })
+    .catch((error) => {
+      if (error.status === 401) {
+        dispatch(
+          addSnackbar({
+            message: "Authentication failed. Please log in again.",
+            severity: "error",
+          }),
+        );
+      } else {
+        dispatch(
+          addSnackbar({
+            message: error.message || "Failed to get pantry information",
+            severity: "error",
+          }),
+        );
+      }
       throw error;
     });
   };
