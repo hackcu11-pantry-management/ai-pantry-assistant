@@ -65,8 +65,9 @@ const LandingPage = () => {
         const expiryDate = new Date(item.expiration_date);
         if (!isNaN(expiryDate.getTime())) {
           formattedExpiry = expiryDate.toLocaleDateString("en-US", {
-            month: "numeric",
-            day: "numeric",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
           });
         }
       } catch (e) {
