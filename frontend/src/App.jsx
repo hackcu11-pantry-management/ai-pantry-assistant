@@ -21,7 +21,7 @@ import CalendarPage from "./pages/CalendarPage/CalendarPage";
 import ModalProvider from "./ModalProvider";
 
 import "./App.css";
-import { logout } from "./redux/actions/userActions";
+import { logout, addLoginAuthentication } from "./redux/actions/userActions";
 
 // Development component that auto-logs in and redirects to home
 const DevAutoLogin = ({ setIsLoggedIn }) => {
@@ -49,12 +49,20 @@ function App() {
       setIsLoggedIn(true);
     } else {
       // Check localStorage as fallback
-      const user = localStorage.getItem("user");
-      if (user) {
-        setIsLoggedIn(true);
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        try {
+          const userData = JSON.parse(userString);
+          // Restore user data to Redux state
+          dispatch(addLoginAuthentication(userData));
+          setIsLoggedIn(true);
+        } catch (error) {
+          console.error("Error parsing user data from localStorage:", error);
+          localStorage.removeItem("user");
+        }
       }
     }
-  }, [loginResult]);
+  }, [loginResult, dispatch]);
 
   // Handle logout
   const handleLogout = () => {
