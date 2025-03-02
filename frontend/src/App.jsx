@@ -68,16 +68,16 @@ function App() {
   const handleLogout = () => {
     // Set logging out state to prevent content flash
     setIsLoggingOut(true);
-    
+
     // Clear Redux state and localStorage
     dispatch(logout());
     localStorage.removeItem("user");
-    
+
     // Short timeout to ensure state updates before redirect
     setTimeout(() => {
       // Redirect to signin page
       window.location.replace("/signin");
-      
+
       // Update local state last (though this won't matter due to the redirect)
       setIsLoggedIn(false);
     }, 50);

@@ -18,10 +18,12 @@ const DeleteConfirmationModal = () => {
 
   const handleDelete = async () => {
     if (!selectedProduct || !selectedProduct.id) {
-      dispatch(addSnackbar({
-        message: "No item selected for deletion",
-        severity: "error",
-      }));
+      dispatch(
+        addSnackbar({
+          message: "No item selected for deletion",
+          severity: "error",
+        }),
+      );
       return;
     }
 
@@ -38,42 +40,49 @@ const DeleteConfirmationModal = () => {
 
   // Button styles
   const buttonStyle = {
-    padding: '8px 16px',
-    fontSize: '16px',
-    margin: '0 8px'
+    padding: "8px 16px",
+    fontSize: "16px",
+    margin: "0 8px",
   };
 
   const deleteButtonStyle = {
     ...buttonStyle,
-    backgroundColor: '#dc3545',
-    borderColor: '#dc3545',
-    color: 'white',
-    transition: 'background-color 0.2s ease'
+    backgroundColor: "#dc3545",
+    borderColor: "#dc3545",
+    color: "white",
+    transition: "background-color 0.2s ease",
   };
 
   const cancelButtonStyle = {
     ...buttonStyle,
-    backgroundColor: '#6c757d',
-    borderColor: '#6c757d',
-    color: 'white',
-    transition: 'background-color 0.2s ease'
+    backgroundColor: "#6c757d",
+    borderColor: "#6c757d",
+    color: "white",
+    transition: "background-color 0.2s ease",
   };
 
   // Hover handlers
   const handleDeleteHover = (e, isHover) => {
-    e.target.style.backgroundColor = isHover ? '#c82333' : '#dc3545';
-    e.target.style.borderColor = isHover ? '#bd2130' : '#dc3545';
+    e.target.style.backgroundColor = isHover ? "#c82333" : "#dc3545";
+    e.target.style.borderColor = isHover ? "#bd2130" : "#dc3545";
   };
 
   const handleCancelHover = (e, isHover) => {
-    e.target.style.backgroundColor = isHover ? '#5a6268' : '#6c757d';
-    e.target.style.borderColor = isHover ? '#545b62' : '#6c757d';
+    e.target.style.backgroundColor = isHover ? "#5a6268" : "#6c757d";
+    e.target.style.borderColor = isHover ? "#545b62" : "#6c757d";
   };
 
   // Custom footer with our buttons
   const renderFooter = () => (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '1rem' }}>
-      <button 
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        gap: "12px",
+        marginTop: "1rem",
+      }}
+    >
+      <button
         className="btn"
         onClick={handleClose}
         disabled={isDeleting}
@@ -83,7 +92,7 @@ const DeleteConfirmationModal = () => {
       >
         Cancel
       </button>
-      <button 
+      <button
         className="btn"
         onClick={handleDelete}
         disabled={isDeleting}
@@ -101,15 +110,17 @@ const DeleteConfirmationModal = () => {
       modal_id="deleteConfirmationModal"
       title="Delete Item"
       footerButtons={[]}
-      style={{ maxWidth: '400px' }}
+      style={{ maxWidth: "400px" }}
     >
-      <div style={{ textAlign: 'center', padding: '20px 0' }}>
-        <p style={{ fontSize: '18px', marginBottom: '20px' }}>
+      <div style={{ textAlign: "center", padding: "20px 0" }}>
+        <p style={{ fontSize: "18px", marginBottom: "20px" }}>
           Are you sure you want to delete this item?
         </p>
         {selectedProduct && (
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>{selectedProduct.name}</h3>
+          <div style={{ marginBottom: "20px" }}>
+            <h3 style={{ fontSize: "20px", fontWeight: "bold" }}>
+              {selectedProduct.name}
+            </h3>
             <p>{selectedProduct.quantity}</p>
           </div>
         )}
@@ -119,4 +130,4 @@ const DeleteConfirmationModal = () => {
   );
 };
 
-export default DeleteConfirmationModal; 
+export default DeleteConfirmationModal;
