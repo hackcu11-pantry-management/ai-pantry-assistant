@@ -37,11 +37,11 @@ const SignIn = ({ setIsLoggedIn }) => {
     try {
       // Call the login action
       const response = await dispatch(login(formData));
-      
+
       if (response.success) {
         // Update local auth state
         setIsLoggedIn(true);
-        
+
         // Redirect to home page
         navigate("/home", { state: { fromLogin: true } });
       } else {

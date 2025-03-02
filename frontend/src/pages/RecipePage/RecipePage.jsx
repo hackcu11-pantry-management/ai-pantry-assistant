@@ -66,9 +66,10 @@ const RecipePage = () => {
 
         if (data.success) {
           // Parse the recipes from the response
-          const parsedRecipes = typeof data.recipes === "string" 
-            ? JSON.parse(data.recipes) 
-            : data.recipes;
+          const parsedRecipes =
+            typeof data.recipes === "string"
+              ? JSON.parse(data.recipes)
+              : data.recipes;
           setRecipes(parsedRecipes.recipes || []);
         } else {
           throw new Error(data.error || "Failed to get recipes");
@@ -92,11 +93,7 @@ const RecipePage = () => {
         </p>
       </div>
 
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
+      {error && <div className="error-message">{error}</div>}
 
       {isLoading ? (
         <div className="loading-container">
@@ -116,14 +113,14 @@ const RecipePage = () => {
               </div>
               <div className="recipe-card-body">
                 <p className="recipe-description">{recipe.description}</p>
-                
+
                 <h4>Ingredients:</h4>
                 <ul className="ingredients-list">
                   {recipe.ingredients.map((ingredient, i) => (
                     <li key={i}>{ingredient}</li>
                   ))}
                 </ul>
-                
+
                 <h4>Instructions:</h4>
                 <ol className="instructions-list">
                   {recipe.instructions.map((step, i) => (
