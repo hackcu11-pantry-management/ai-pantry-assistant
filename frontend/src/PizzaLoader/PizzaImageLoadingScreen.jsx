@@ -19,7 +19,7 @@ const PizzaImageLoadingScreen = () => {
   useEffect(() => {
     // Handle slice animation
     const sliceInterval = setInterval(() => {
-      setSliceState((prev) => (prev >= 8 ? 8 : prev + 1));
+      setSliceState((prev) => (prev >= 8 ? 0 : prev + 1));
     }, 1250);
 
     // Handle text changes
