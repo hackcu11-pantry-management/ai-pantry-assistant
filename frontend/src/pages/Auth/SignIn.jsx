@@ -43,7 +43,7 @@ const SignIn = ({ setIsLoggedIn }) => {
         setIsLoggedIn(true);
 
         // Redirect to home page
-        navigate("/home", { state: { fromLogin: true } });
+        navigate("/", { state: { fromLogin: true } });
       } else {
         setError(response.error || "Invalid username or password");
       }
