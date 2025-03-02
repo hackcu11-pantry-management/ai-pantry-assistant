@@ -1,5 +1,9 @@
 # PantryPal
 
+## About
+Built from ground up in 24 hours for [HackCU11](https://hackcu.org/hackcu11/).
+Created by Brandon Reeves, Benjamin Getches, Harrison Getches, and Rayaan Lodhi.
+
 ## Quick Start
 Visit [pantrypal.up.railway.app](https://pantrypal.up.railway.app) to access the live application without any installation:
 
