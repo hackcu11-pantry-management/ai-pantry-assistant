@@ -16,7 +16,7 @@ const ExamplePage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5001/api/lookup-upc?upc=${encodeURIComponent(upc)}`,
+        `${API_URL}/lookup-upc?upc=${encodeURIComponent(upc)}`,
       );
       const data = await response.json();
 

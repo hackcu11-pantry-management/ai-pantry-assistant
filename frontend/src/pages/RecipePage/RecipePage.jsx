@@ -8,7 +8,7 @@ import PizzaImageLoadingScreen from "../../PizzaLoader/PizzaImageLoadingScreen";
 import { setRecipes } from "../../redux/actions/recipeActions";
 import { Button, CircularProgress, Snackbar, Alert } from "@mui/material";
 import { updatePantryItems } from "../../redux/actions/productActions";
-
+import { API_URL } from "../../data/constants";
 const RecipePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const RecipePage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:5001/api/get-recipes", {
+      const response = await fetch(`${API_URL}/get-recipes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +83,7 @@ const RecipePage = () => {
 
     setCookingRecipe(recipe.name);
     try {
-      const response = await fetch("http://localhost:5001/api/cook-recipe", {
+      const response = await fetch(`${API_URL}/cook-recipe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -106,7 +106,7 @@ const RecipePage = () => {
       if (data.success) {
         // Update the pantry items in Redux
         // We need to refetch the pantry items to get the updated list
-        const pantryResponse = await fetch("http://localhost:5001/api/pantry", {
+        const pantryResponse = await fetch(`${API_URL}/pantry`, {
           headers: {
             "Authorization": `Bearer ${user.token}`
           }

@@ -44,7 +44,7 @@ const BarcodeScanner = () => {
       return;
     }
 
-    fetch(`http://localhost:5001/api/lookup-upc?upc=${cleanedUPC}`)
+    fetch(`${API_URL}/lookup-upc?upc=${cleanedUPC}`)
       .then((response) => response.json())
       .then((data) => {
         if (!data.success) {
