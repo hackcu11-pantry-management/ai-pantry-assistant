@@ -19,9 +19,11 @@ const LandingPage = () => {
     (state) => !!state.userState.loginResult?.token,
   );
   const authState = useSelector((state) => state.userState.loginResult);
-
+  const userFirstName = useSelector((state) => state.userState.loginResult?.userFirstName);
+  const pantryHeaderText = userFirstName ? `${userFirstName}'s Pantry` : "My Pantry";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [collapsedCategories, setCollapsedCategories] = useState({});
 
   useEffect(() => {
     // Debug authentication state
@@ -50,6 +52,14 @@ const LandingPage = () => {
     }
   }, [dispatch, isAuthenticated, authState]);
 
+  // Handle toggling category collapse
+  const handleToggleCollapse = (category) => {
+    setCollapsedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
   const handleOpenModal = (modal_id) => {
     dispatch(toggleModal(modal_id));
   };
@@ -62,6 +72,7 @@ const LandingPage = () => {
     // Open the edit modal
     handleOpenModal("editItemModal");
   };
+
 
   // Group pantry items by category
   const groupedPantryItems = pantryItems.reduce((acc, item) => {
@@ -107,7 +118,7 @@ const LandingPage = () => {
     <div className="page-container">
       <Card>
         <CardHeader
-          text="Pantry Items"
+          text={pantryHeaderText}
           buttons={[
             {
               text: "Scan Item",
@@ -139,8 +150,14 @@ const LandingPage = () => {
         ) : Object.keys(groupedPantryItems).length > 0 ? (
           Object.entries(groupedPantryItems).map(([category, items]) => (
             <div key={category}>
-              <DetailLine title={category} />
-              <ProductGrid data={items} onItemClick={handleItemClick} />
+              <DetailLine 
+                title={category} 
+                isCollapsed={collapsedCategories[category]} 
+                onToggleCollapse={() => handleToggleCollapse(category)} 
+              />
+              <div className={`category-content ${collapsedCategories[category] ? 'collapsed' : 'expanded'}`}>
+                <ProductGrid data={items} onItemClick={handleItemClick} />
+              </div>
             </div>
           ))
         ) : (

@@ -38,6 +38,7 @@ const DevAutoLogin = ({ setIsLoggedIn }) => {
 function App() {
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dispatch = useDispatch();
   const loginResult = useSelector((state) => state.userState.loginResult);
 
@@ -65,10 +66,31 @@ function App() {
 
   // Handle logout
   const handleLogout = () => {
+    // Set logging out state to prevent content flash
+    setIsLoggingOut(true);
+    
+    // Clear Redux state and localStorage
     dispatch(logout());
     localStorage.removeItem("user");
-    setIsLoggedIn(false);
+    
+    // Short timeout to ensure state updates before redirect
+    setTimeout(() => {
+      // Redirect to signin page
+      window.location.replace("/signin");
+      
+      // Update local state last (though this won't matter due to the redirect)
+      setIsLoggedIn(false);
+    }, 50);
   };
+
+  // If logging out, show minimal UI
+  if (isLoggingOut) {
+    return (
+      <div className="logging-out-container">
+        <div className="logging-out-message">Logging out...</div>
+      </div>
+    );
+  }
 
   return (
     <Router>
