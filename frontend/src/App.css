@@ -1,7 +1,7 @@
 .app-container {
   min-height: calc(100vh - 70px); /* Adjust based on navbar height */
   padding-top: 20px;
-  background-color: #f5f7fa;
+  background-color: #3a2618;
 }
 
 /* Global styles */

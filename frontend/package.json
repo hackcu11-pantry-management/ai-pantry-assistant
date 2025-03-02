@@ -11,6 +11,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
+    "motion": "^12.4.7",
     "quagga": "^0.12.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
