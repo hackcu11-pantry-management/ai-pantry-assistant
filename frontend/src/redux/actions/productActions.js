@@ -126,7 +126,10 @@ export const addToPantry = (pantryData) => (dispatch, getState) => {
  * @description Makes API call to get the user's pantry items
  */
 export const getUserPantry = () => (dispatch, getState) => {
-  const token = getState().userState.loginResult?.token;
+  const userState = getState().userState;
+  const token = userState.loginResult?.token;
+  
+
 
   if (!token) {
     dispatch(
@@ -139,24 +142,51 @@ export const getUserPantry = () => (dispatch, getState) => {
   }
 
   const url = `${API_URL}/pantry`;
+  
+
+  // Ensure the token is properly formatted
+  const authHeader = `Bearer ${token}`;
+  
 
   return basicAPI(url, "getUserPantry", {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${token}`,
+      'Authorization': authHeader,
+      'Accept': 'application/json'
     },
   })
     .then((response) => {
-      dispatch(setProducts(response.data.pantry_items || []));
+      
+      if (response.success) {
+        dispatch(setProducts(response.pantry_items || []));
+      } else {
+        dispatch(
+          addSnackbar({
+            message: response.error || "Failed to get pantry items",
+            severity: "error",
+          }),
+        );
+      }
       return response;
     })
     .catch((error) => {
-      dispatch(
-        addSnackbar({
-          message: error.message || "Failed to get pantry items",
-          severity: "error",
-        }),
-      );
+      console.error('API Error:', error);
+      // Check if it's a response object with status
+      if (error.status === 401) {
+        dispatch(
+          addSnackbar({
+            message: "Authentication failed. Please log in again.",
+            severity: "error",
+          }),
+        );
+      } else {
+        dispatch(
+          addSnackbar({
+            message: error.message || "Failed to get pantry items",
+            severity: "error",
+          }),
+        );
+      }
       throw error;
     });
 };

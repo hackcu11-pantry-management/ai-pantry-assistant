@@ -114,6 +114,25 @@ button:hover {
   display: block;
 }
 
+.pantry-category {
+  margin-bottom: 20px;
+}
+
+.pantry-category h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #2c3e50;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 5px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
 @media (max-width: 768px) {
   .dashboard {
     grid-template-columns: 1fr;

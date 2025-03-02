@@ -9,6 +9,7 @@ const ProductCard = ({ item }) => {
     <div className="product-card">
       <img src={item.image} alt={item.name} className="product-image" />
       <h3 className="product-name">{item.name}</h3>
+      {item.quantity && <p className="product-quantity">{item.quantity}</p>}
       <p className="product-expiry">Expiry: {item.expiry}</p>
     </div>
   );

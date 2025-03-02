@@ -1,35 +1,85 @@
 /** @module LandingPage.jsx */
 
-import React from "react";
-import { useDispatch } from "react-redux";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 import { Card, CardHeader, DetailLine, ProductGrid } from "../../common";
 import { toggleModal } from "../../redux/actions/modalActions";
+import { getUserPantry } from "../../redux/actions/productActions";
 
 import "./LandingPage.css";
 
-const items = [
-  {
-    id: 1,
-    name: "Milk",
-    expiry: "2-28",
-    image: "data:image/jpeg;base64,...",
-  },
-  {
-    id: 2,
-    name: "Eggs",
-    expiry: "3-05",
-    image: "data:image/jpeg;base64,...",
-  },
-  { id: 3, name: "Cheese", expiry: "3-15", image: "/images/cheese.png" },
-];
-
 const LandingPage = () => {
   const dispatch = useDispatch();
+  const pantryItems = useSelector((state) => state.productState.products);
+  const isAuthenticated = useSelector((state) => !!state.userState.loginResult?.token);
+  const authState = useSelector((state) => state.userState.loginResult);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Debug authentication state
+    console.log('Auth State:', authState);
+    console.log('Is Authenticated:', isAuthenticated);
+    
+    // Fetch pantry items if authenticated
+    if (isAuthenticated) {
+      setLoading(true);
+      setError(null);
+      console.log('Dispatching getUserPantry');
+      dispatch(getUserPantry())
+        .then((response) => {
+          console.log('getUserPantry success:', response);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error('getUserPantry error:', err);
+          setError(err.message || "Failed to load pantry items");
+          setLoading(false);
+        });
+    } else {
+      console.log('Not authenticated, skipping API call');
+      setLoading(false);
+      setError("Please log in to view your pantry items");
+    }
+  }, [dispatch, isAuthenticated, authState]);
 
   const handleOpenModal = (modal_id) => {
     dispatch(toggleModal(modal_id));
   };
+
+  // Group pantry items by category
+  const groupedPantryItems = pantryItems.reduce((acc, item) => {
+    const category = item.productcategory || "Other";
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    
+    // Format expiry date with error handling
+    let formattedExpiry = 'N/A';
+    if (item.expiration_date) {
+      try {
+        const expiryDate = new Date(item.expiration_date);
+        if (!isNaN(expiryDate.getTime())) {
+          formattedExpiry = expiryDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+        }
+      } catch (e) {
+        console.error('Error formatting date:', e);
+      }
+    }
+    
+    acc[category].push({
+      id: item.pantryid,
+      name: item.productname,
+      expiry: formattedExpiry,
+      image: item.productimages && item.productimages.length > 0 
+        ? item.productimages[0] 
+        : 'https://via.placeholder.com/150?text=No+Image',
+      quantity: `${item.quantity} ${item.quantitytype || 'items'}`
+    });
+    return acc;
+  }, {});
 
   return (
     <div className="page-container">
@@ -47,11 +97,42 @@ const LandingPage = () => {
               onClick: () => handleOpenModal("scanItemModal"),
               variant: "contained",
             },
+            {
+              text: isAuthenticated ? "Refresh" : "Login",
+              onClick: () => isAuthenticated 
+                ? dispatch(getUserPantry()) 
+                : handleOpenModal("loginModal"),
+              variant: "contained",
+            },
           ]}
         />
-        <DetailLine title="Dairy" />
-        <ProductGrid data={items} />
-        <DetailLine title="Meats" />
+        
+        {loading ? (
+          <div className="loading-container">Loading your pantry items...</div>
+        ) : error ? (
+          <div className="error-container">
+            {error}
+            {!isAuthenticated && (
+              <button 
+                className="login-button" 
+                onClick={() => handleOpenModal("loginModal")}
+              >
+                Login Now
+              </button>
+            )}
+          </div>
+        ) : Object.keys(groupedPantryItems).length > 0 ? (
+          Object.entries(groupedPantryItems).map(([category, items]) => (
+            <div key={category}>
+              <DetailLine title={category} />
+              <ProductGrid data={items} />
+            </div>
+          ))
+        ) : (
+          <div className="empty-pantry">
+            <p>Your pantry is empty. Add some items!</p>
+          </div>
+        )}
       </Card>
     </div>
   );

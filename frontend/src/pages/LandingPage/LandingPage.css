@@ -3,3 +3,44 @@
 .page-container {
     padding: 20px;
 }
+
+.loading-container {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+    font-style: italic;
+}
+
+.error-container {
+    text-align: center;
+    padding: 20px;
+    color: #e74c3c;
+    background-color: #fadbd8;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.login-button {
+    margin-top: 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #2980b9;
+}
+
+.empty-pantry {
+    text-align: center;
+    padding: 30px;
+    color: #7f8c8d;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin: 10px 0;
+}
