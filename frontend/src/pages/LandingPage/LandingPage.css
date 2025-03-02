@@ -44,3 +44,19 @@
     border-radius: 4px;
     margin: 10px 0;
 }
+
+/* Animation for collapsible categories */
+.category-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.category-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.category-content.expanded {
+    max-height: 2000px; /* Large enough to contain content */
+    opacity: 1;
+}

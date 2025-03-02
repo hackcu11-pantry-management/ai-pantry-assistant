@@ -19,6 +19,7 @@ const LandingPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [collapsedCategories, setCollapsedCategories] = useState({});
 
   useEffect(() => {
     // Debug authentication state
@@ -46,6 +47,14 @@ const LandingPage = () => {
       setError("Please log in to view your pantry items");
     }
   }, [dispatch, isAuthenticated, authState]);
+
+  // Handle toggling category collapse
+  const handleToggleCollapse = (category) => {
+    setCollapsedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
   const handleOpenModal = (modal_id) => {
     dispatch(toggleModal(modal_id));
@@ -136,8 +145,14 @@ const LandingPage = () => {
         ) : Object.keys(groupedPantryItems).length > 0 ? (
           Object.entries(groupedPantryItems).map(([category, items]) => (
             <div key={category}>
-              <DetailLine title={category} />
-              <ProductGrid data={items} onItemClick={handleItemClick} />
+              <DetailLine 
+                title={category} 
+                isCollapsed={collapsedCategories[category]} 
+                onToggleCollapse={() => handleToggleCollapse(category)} 
+              />
+              <div className={`category-content ${collapsedCategories[category] ? 'collapsed' : 'expanded'}`}>
+                <ProductGrid data={items} onItemClick={handleItemClick} />
+              </div>
             </div>
           ))
         ) : (
