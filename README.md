@@ -1,5 +1,16 @@
 # PantryPal
 
+## Quick Start
+Visit [pantrypal.up.railway.app](https://pantrypal.up.railway.app) to access the live application without any installation:
+
+1. Create a new account or log in with the demo credentials
+2. Explore your virtual pantry
+3. Try scanning products or adding them manually
+4. Generate recipe suggestions based on your pantry items
+
+For local development, follow the installation instructions below.
+
+
 ## Overview
 
 AI Pantry Assistant is a smart kitchen management system that helps you track your pantry inventory, monitor expiration dates, and generate recipe suggestions based on what you have on hand. The application uses barcode scanning, AI-powered recipe generation, and expiration date tracking to reduce food waste and simplify meal planning.
