@@ -25,8 +25,10 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
 
   const handleLogout = () => {
     if (onLogout) {
+      // Set local state immediately to prevent flashing content
+      setUserName("");
+      // Call the parent logout handler which will handle the redirect
       onLogout();
-      navigate("/");
     }
   };
 
