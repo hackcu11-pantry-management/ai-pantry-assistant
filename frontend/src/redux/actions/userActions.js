@@ -44,7 +44,7 @@ export const login = (loginData) => (dispatch) => {
     body: JSON.stringify(loginData),
   })
     .then((response) => {
-      console.log('Login response:', response);
+      console.log("Login response:", response);
       if (response.success) {
         const userData = {
           userID: response.userID,
@@ -53,7 +53,10 @@ export const login = (loginData) => (dispatch) => {
           userFirstName: response.userFirstName,
           userLastName: response.userLastName,
         };
-        console.log('Setting user data in store:', { ...userData, token: userData.token ? 'Token exists' : 'No token' });
+        console.log("Setting user data in store:", {
+          ...userData,
+          token: userData.token ? "Token exists" : "No token",
+        });
         dispatch(addLoginAuthentication(userData));
         dispatch(
           addSnackbar({

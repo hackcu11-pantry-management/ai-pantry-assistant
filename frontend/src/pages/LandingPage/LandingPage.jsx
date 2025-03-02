@@ -12,34 +12,36 @@ import "./LandingPage.css";
 const LandingPage = () => {
   const dispatch = useDispatch();
   const pantryItems = useSelector((state) => state.productState.products);
-  const isAuthenticated = useSelector((state) => !!state.userState.loginResult?.token);
+  const isAuthenticated = useSelector(
+    (state) => !!state.userState.loginResult?.token,
+  );
   const authState = useSelector((state) => state.userState.loginResult);
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     // Debug authentication state
-    console.log('Auth State:', authState);
-    console.log('Is Authenticated:', isAuthenticated);
-    
+    console.log("Auth State:", authState);
+    console.log("Is Authenticated:", isAuthenticated);
+
     // Fetch pantry items if authenticated
     if (isAuthenticated) {
       setLoading(true);
       setError(null);
-      console.log('Dispatching getUserPantry');
+      console.log("Dispatching getUserPantry");
       dispatch(getUserPantry())
         .then((response) => {
-          console.log('getUserPantry success:', response);
+          console.log("getUserPantry success:", response);
           setLoading(false);
         })
         .catch((err) => {
-          console.error('getUserPantry error:', err);
+          console.error("getUserPantry error:", err);
           setError(err.message || "Failed to load pantry items");
           setLoading(false);
         });
     } else {
-      console.log('Not authenticated, skipping API call');
+      console.log("Not authenticated, skipping API call");
       setLoading(false);
       setError("Please log in to view your pantry items");
     }
@@ -55,28 +57,32 @@ const LandingPage = () => {
     if (!acc[category]) {
       acc[category] = [];
     }
-    
+
     // Format expiry date with error handling
-    let formattedExpiry = 'N/A';
+    let formattedExpiry = "N/A";
     if (item.expiration_date) {
       try {
         const expiryDate = new Date(item.expiration_date);
         if (!isNaN(expiryDate.getTime())) {
-          formattedExpiry = expiryDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+          formattedExpiry = expiryDate.toLocaleDateString("en-US", {
+            month: "numeric",
+            day: "numeric",
+          });
         }
       } catch (e) {
-        console.error('Error formatting date:', e);
+        console.error("Error formatting date:", e);
       }
     }
-    
+
     acc[category].push({
       id: item.pantryid,
       name: item.productname,
       expiry: formattedExpiry,
-      image: item.productimages && item.productimages.length > 0 
-        ? item.productimages[0] 
-        : 'https://via.placeholder.com/150?text=No+Image',
-      quantity: `${item.quantity} ${item.quantitytype || 'items'}`
+      image:
+        item.productimages && item.productimages.length > 0
+          ? item.productimages[0]
+          : "https://via.placeholder.com/150?text=No+Image",
+      quantity: `${item.quantity} ${item.quantitytype || "items"}`,
     });
     return acc;
   }, {});
@@ -99,15 +105,15 @@ const LandingPage = () => {
             },
           ]}
         />
-        
+
         {loading ? (
           <div className="loading-container">Loading your pantry items...</div>
         ) : error ? (
           <div className="error-container">
             {error}
             {!isAuthenticated && (
-              <button 
-                className="login-button" 
+              <button
+                className="login-button"
                 onClick={() => handleOpenModal("loginModal")}
               >
                 Login Now

@@ -16,6 +16,7 @@ import HomePage from "./pages/HomePage/HomePage";
 import RecipePage from "./pages/RecipePage/RecipePage";
 import { SignIn, SignUp } from "./pages/Auth"; // Make sure this import is correct
 import ForgotPassword from "./pages/Auth/ForgotPassword";
+import CalendarPage from "./pages/CalendarPage/CalendarPage";
 
 import ModalProvider from "./ModalProvider";
 
@@ -86,6 +87,7 @@ function App() {
           {/* Protected routes */}
           <Route path="/home" element={<HomePage />} />
           <Route path="/recipes" element={<RecipePage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
 
           {/* Development routes */}
           <Route path="/ex" element={<ExamplePage />} />

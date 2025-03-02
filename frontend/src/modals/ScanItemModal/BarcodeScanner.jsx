@@ -66,17 +66,17 @@ const BarcodeScanner = () => {
             expiryDate: item.expiryDate || item.productexpiryDate || "",
           };
 
-          return mappedData;          
-        } 
+          return mappedData;
+        }
 
         return {};
       })
-      .then(data => {
+      .then((data) => {
         dispatch(selectProduct(data));
         dispatch(toggleModal("scanItemModal"));
         return data;
       })
-      .then(data => {
+      .then((data) => {
         dispatch(toggleModal("reviewItemModal"));
       })
       .catch((err) => {
@@ -134,10 +134,10 @@ const BarcodeScanner = () => {
           } else {
             console.error("Quagga initialization failed:", err);
             setError(
-              `Failed to initialize scanner: ${err.message || "Unknown error"}`
+              `Failed to initialize scanner: ${err.message || "Unknown error"}`,
             );
           }
-        }
+        },
       );
     }, 100);
   };

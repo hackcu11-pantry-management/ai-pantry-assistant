@@ -8,7 +8,8 @@ import { addToPantry } from "../redux/actions/productActions";
 
 const ReviewItemModal = () => {
   const dispatch = useDispatch();
-  const selectedItem = useSelector((state) => state.productState?.selected) ?? {};
+  const selectedItem =
+    useSelector((state) => state.productState?.selected) ?? {};
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -31,22 +32,22 @@ const ReviewItemModal = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const addItemToPantry = () => {
     const payload = {
-      productUPC: String(selectedItem.upc || ""),  // Ensure UPC is always a string
+      productUPC: String(selectedItem.upc || ""), // Ensure UPC is always a string
       quantity: Number(formData.amount) || 1,
       quantityType: formData.unit,
       date_purchased: formData.purchaseDate,
-      expiration_date: formData.expiryDate
+      expiration_date: formData.expiryDate,
     };
-    
-    if(payload.productUPC && payload.quantity) {
+
+    if (payload.productUPC && payload.quantity) {
       console.log("payload", payload);
       setIsSubmitting(true);
       dispatch(addToPantry(payload))
@@ -60,7 +61,7 @@ const ReviewItemModal = () => {
           setIsSubmitting(false);
         });
     }
-  }
+  };
 
   const handleClose = (modal_id) => {
     dispatch(toggleModal(modal_id));
@@ -75,13 +76,13 @@ const ReviewItemModal = () => {
           text: "Cancel",
           variant: "outlined",
           onClick: () => handleClose("reviewItemModal"),
-          disabled: isSubmitting
+          disabled: isSubmitting,
         },
         {
           text: isSubmitting ? "Saving..." : "Save",
           variant: "contained",
           onClick: () => addItemToPantry(),
-          disabled: isSubmitting
+          disabled: isSubmitting,
         },
       ]}
     >
@@ -95,9 +96,11 @@ const ReviewItemModal = () => {
             />
           </div>
         )}
-        
+
         <div className="form-group mb-3">
-          <label htmlFor="title" className="form-label">Name</label>
+          <label htmlFor="title" className="form-label">
+            Name
+          </label>
           <input
             type="text"
             id="title"
@@ -109,7 +112,9 @@ const ReviewItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="amount" className="form-label">Amount</label>
+          <label htmlFor="amount" className="form-label">
+            Amount
+          </label>
           <div className="input-group">
             <input
               type="number"
@@ -137,7 +142,9 @@ const ReviewItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="purchaseDate" className="form-label">Purchase Date</label>
+          <label htmlFor="purchaseDate" className="form-label">
+            Purchase Date
+          </label>
           <input
             type="date"
             id="purchaseDate"
@@ -149,7 +156,9 @@ const ReviewItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="expiryDate" className="form-label">Expiry Date</label>
+          <label htmlFor="expiryDate" className="form-label">
+            Expiry Date
+          </label>
           <input
             type="date"
             id="expiryDate"

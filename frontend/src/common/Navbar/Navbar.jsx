@@ -56,6 +56,7 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
             </Link>
             <Link to="/recipes">Recipes</Link>
             <Link to="/profile">Profile</Link>
+            <Link to="/calendar">Calendar</Link>
             {userName && (
               <span className="user-greeting">Hello, {userName}</span>
             )}
