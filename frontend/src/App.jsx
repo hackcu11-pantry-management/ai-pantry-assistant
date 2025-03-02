@@ -8,7 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import { Navbar } from "./common";
+import { Navbar, SnackbarProvider } from "./common";
 
 import LandingPage from "./pages/LandingPage/LandingPage";
 import ExamplePage from "./pages/ExamplePage";
@@ -73,6 +73,7 @@ function App() {
   return (
     <Router>
       <ModalProvider />
+      <SnackbarProvider />
       <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
       <div className="app-container">
         <Routes>
