@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Quagga from "quagga";
+import { useDispatch } from "react-redux";
+import { toggleModal } from "../../redux/actions/modalActions";
 
 const BarcodeScanner = () => {
   const [scanning, setScanning] = useState(false);
@@ -11,33 +13,56 @@ const BarcodeScanner = () => {
   const [isLoading, setIsLoading] = useState(false);
   const scannerRef = useRef(null);
   const quaggaInitialized = useRef(false);
+  const dispatch = useDispatch();
+
+  // Validate UPC code format
+  const isValidUPC = (code) => {
+    // Remove any non-digit characters
+    const cleanCode = code.replace(/[^\d]/g, '');
+    // Check if it's a valid length (UPC-A is 12 digits, UPC-E is 8 digits)
+    return /^\d{8}$|^\d{12}$/.test(cleanCode);
+  };
+
+  // Clean UPC code
+  const cleanUPC = (code) => {
+    // Remove any non-digit characters and leading/trailing whitespace
+    return code.replace(/[^\d]/g, '').trim();
+  };
 
   const lookupUPC = async (upc) => {
     setIsLoading(true);
     setError(null);
 
+    // Clean and validate the UPC
+    const cleanedUPC = cleanUPC(upc);
+    if (!isValidUPC(cleanedUPC)) {
+      setError("Invalid UPC code format. Please try scanning again.");
+      setIsLoading(false);
+      return;
+    }
+
     const maxRetries = 3;
     let retryCount = 0;
+    let retryDelay = 2000; // Start with 2 seconds
 
     while (retryCount < maxRetries) {
       try {
         const response = await fetch(
-          `http://localhost:5001/api/lookup-upc?upc=${upc}`
+          `http://localhost:5001/api/lookup-upc?upc=${cleanedUPC}`
         );
         const data = await response.json();
 
         console.log("Full API Response:", data);
 
         if (response.status === 429) {
-          // Rate limited - wait and retry
+          // Rate limited - use exponential backoff
           retryCount++;
           if (retryCount < maxRetries) {
+            const waitTime = retryDelay * Math.pow(2, retryCount - 1);
             setError(
-              `Rate limited, retrying in ${retryCount * 2} seconds... (Attempt ${retryCount}/${maxRetries})`
+              `Rate limited, retrying in ${waitTime/1000} seconds... (Attempt ${retryCount}/${maxRetries})`
             );
-            await new Promise((resolve) =>
-              setTimeout(resolve, retryCount * 2000)
-            );
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
             continue;
           }
         }
@@ -47,33 +72,32 @@ const BarcodeScanner = () => {
         }
 
         if (data.items && data.items[0]) {
-          // Map the API response fields directly
           const item = data.items[0];
           console.log("Item from API:", item);
-          console.log("Raw productname:", item.productname);
-          console.log("Raw productbrand:", item.productbrand);
-          console.log("Object keys:", Object.keys(item));
 
-          // Ensure we're accessing the properties correctly
+          // Handle both API and database response formats
           const mappedData = {
-            title: item["productname"],
-            brand: item["productbrand"],
-            category: item["productcategory"],
-            size: item["productsize"],
-            weight: item["productweight"],
-            color: item["productcolor"],
-            model: item["productmodel"],
-            dimension: item["productdimension"],
-            description: item["productdescription"],
-            lowest_recorded_price: item["productlowestprice"],
-            highest_recorded_price: item["producthighestprice"],
-            currency: item["productcurrency"],
-            images: item["productimages"] || [],
-            upc: item["productupc"],
+            title: item.title || item.productname || "",
+            brand: item.brand || item.productbrand || "",
+            category: item.category || item.productcategory || "",
+            size: item.size || item.productsize || "",
+            weight: item.weight || item.productweight || "",
+            color: item.color || item.productcolor || "",
+            model: item.model || item.productmodel || "",
+            dimension: item.dimension || item.productdimension || "",
+            description: item.description || item.productdescription || "",
+            lowest_recorded_price: item.lowest_recorded_price || item.productlowestprice || 0,
+            highest_recorded_price: item.highest_recorded_price || item.producthighestprice || 0,
+            currency: item.currency || item.productcurrency || "USD",
+            images: item.images || item.productimages || [],
+            upc: item.upc || item.productupc || cleanedUPC,
           };
 
           console.log("Mapped Product Data:", mappedData);
           setProductData(mappedData);
+          
+          // Open the review modal with the product data
+          dispatch(toggleModal("reviewItemModal", { productData: mappedData }));
           break; // Success - exit the retry loop
         } else {
           throw new Error("No product data found");
@@ -94,9 +118,18 @@ const BarcodeScanner = () => {
 
   const onDetected = (result) => {
     const scannedCode = result.codeResult.code;
-    setBarcode(scannedCode);
+    console.log("Raw scanned code:", scannedCode);
+    
+    // Clean and validate the code before proceeding
+    const cleanedCode = cleanUPC(scannedCode);
+    if (!isValidUPC(cleanedCode)) {
+      console.log("Invalid UPC detected:", scannedCode);
+      return; // Don't process invalid codes
+    }
+    
+    setBarcode(cleanedCode);
     stopScanner();
-    lookupUPC(scannedCode);
+    lookupUPC(cleanedCode);
   };
 
   const startScanner = () => {
