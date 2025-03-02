@@ -37,7 +37,7 @@ const PizzaImageLoadingScreen = () => {
     };
   }, []);
 
-  // Create exactly 8 evenly-spaced slices
+  // Create exactly 8 slices
   const slices = Array(8)
     .fill(0)
     .map((_, i) => {
@@ -47,7 +47,7 @@ const PizzaImageLoadingScreen = () => {
       return {
         index: i,
         rotation: startAngle,
-        pullDirection: startAngle + 22.5, // Middle of the slice angle
+        pullDirection: startAngle + 22.5, // Middle of angle
         pullDistance: 40,
       };
     });
@@ -55,7 +55,7 @@ const PizzaImageLoadingScreen = () => {
   return (
     <div className="loading-container">
       <div className="pizza-container">
-        {/* Pizza Base - Only visible if all slices are removed */}
+        {/* Pizza Base */}
         <div className="pizza-base">
           <img
             src="/pizza-removebg-preview.png"
@@ -68,7 +68,6 @@ const PizzaImageLoadingScreen = () => {
         {slices.map((slice) => {
           const isRemoved = slice.index < sliceState;
 
-          // Calculate position for pulled slices
           const radians = (slice.pullDirection * Math.PI) / 180;
           const translateX = isRemoved
             ? Math.cos(radians) * slice.pullDistance
@@ -77,11 +76,9 @@ const PizzaImageLoadingScreen = () => {
             ? Math.sin(radians) * slice.pullDistance
             : 0;
 
-          // Calculate clip path for perfect triangle slice
           const startAngle = slice.rotation;
           const endAngle = startAngle + 45;
 
-          // Convert to coordinates for clip-path
           const startRadians = (startAngle * Math.PI) / 180;
           const endRadians = (endAngle * Math.PI) / 180;
 
