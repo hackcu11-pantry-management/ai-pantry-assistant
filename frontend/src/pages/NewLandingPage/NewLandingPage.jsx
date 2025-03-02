@@ -1,12 +1,15 @@
 "use client";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import React from "react";
 import door from "./Door2.png"; // Import the image
 import doorI from "./Rectangle 1.png";
 import "./NewLandingPage.css";
+import { Button } from "../../common";
 
 export default function ScrollLinked() {
   const { scrollYProgress } = useScroll();
+  const navigate = useNavigate();
 
   // Transform scroll progress into image scale and button opacity
   const imageScale = useTransform(scrollYProgress, [0, 1], [1.5, 16]); // Image scales from 0.5x to 4x as user scrolls
@@ -107,29 +110,16 @@ export default function ScrollLinked() {
           gap: "20px",
         }}
       >
-        <button
-          style={{
-            padding: "10px 20px",
-            border: "1px solid black",
-            borderRadius: "4px",
-            backgroundColor: "transparent",
-            cursor: "pointer",
-          }}
+        <Button
+          onClick={() => navigate("/signin")}
         >
           Log In
-        </button>
-        <button
-          style={{
-            padding: "10px 20px",
-            border: "none",
-            borderRadius: "4px",
-            backgroundColor: "#3498db",
-            color: "white",
-            cursor: "pointer",
-          }}
+        </Button>
+        <Button
+          onClick={() => navigate("/signup")}
         >
           Register
-        </button>
+        </Button>
       </motion.div>
 
       {/* Content with Card Animations */}

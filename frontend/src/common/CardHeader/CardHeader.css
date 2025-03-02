@@ -7,13 +7,14 @@
   align-items: center;
   font-weight: bold;
   padding: 0.75rem 1rem;
-  border-bottom: 2px solid #ecf0f1;
+  border-bottom: 2px solid var(--bg-secondary);
+  color: var(--coffee-dark);
 }
 
 .header-text {
   flex: 1;
   text-align: left;
-  font-size: 1.1rem;
+  font-size: 1.6rem;
 }
 
 .header-buttons {
@@ -22,8 +23,8 @@
 }
 
 button {
-  background-color: #3498db;
-  color: white;
+  background-color: var(--coffee-dark);
+  color: var(--text-light);
   border: none;
   padding: 8px 15px;
   border-radius: 4px;
@@ -33,7 +34,7 @@ button {
 }
 
 button:hover {
-  background-color: #2980b9;
+  background-color: var(--coffee-dark);
 }
 
 

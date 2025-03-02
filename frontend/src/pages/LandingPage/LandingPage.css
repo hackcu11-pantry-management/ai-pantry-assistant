@@ -2,4 +2,62 @@
 
 .page-container {
     padding: 20px;
+    background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary));
+    min-height: calc(100vh - 110px); /* Account for navbar and padding */
+}
+
+.loading-container {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.error-container {
+    text-align: center;
+    padding: 20px;
+    color: var(--error);
+    background: linear-gradient(to right, rgba(166, 75, 42, 0.1), rgba(166, 75, 42, 0.2));
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.login-button {
+    background-color: var(--coffee-medium);
+    color: var(--text-light);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: var(--coffee-dark);
+}
+
+.empty-pantry {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-secondary);
+    background: linear-gradient(to bottom, var(--bg-secondary), var(--coffee-cream));
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+/* Animation for collapsible categories */
+.category-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.category-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.category-content.expanded {
+    max-height: 2000px; /* Large enough to contain content */
+    opacity: 1;
 }

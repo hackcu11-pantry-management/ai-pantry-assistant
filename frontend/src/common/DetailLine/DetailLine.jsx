@@ -1,13 +1,19 @@
 /** @module DetailLine.jsx */
 
 import React from "react";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 import "./DetailLine.css";
 
-const DetailLine = ({ title }) => {
+const DetailLine = ({ title, isCollapsed, onToggleCollapse }) => {
   return (
     <div className="detail-line">
-      <span>{title}</span>
+      <div className="title-container" onClick={onToggleCollapse}>
+        <KeyboardArrowDownIcon
+          className={`chevron-icon ${isCollapsed ? "rotated" : ""}`}
+        />
+        <span>{title}</span>
+      </div>
       <div className="line" />
     </div>
   );

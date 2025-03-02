@@ -14,8 +14,43 @@
     border: 1px solid #ddd;
     border-radius: 8px;
     text-align: center;
-    background-color: #fff;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    box-shadow: 2px 2px 10px rgba(58, 38, 24, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    border-top: 2px solid var(--coffee-medium);
+}
+
+.product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 2px 5px 15px rgba(58, 38, 24, 0.15);
+}
+
+.delete-icon-container {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.delete-icon-container:hover {
+    background-color: rgba(166, 75, 42, 0.1);
+    transform: scale(1.1);
+}
+
+.delete-icon {
+    color: var(--error);
+    font-size: 18px !important;
 }
 
 .product-image {
@@ -30,9 +65,16 @@
     font-size: 16px;
     font-weight: bold;
     margin-bottom: 4px;
+    color: var(--coffee-dark);
+}
+
+.product-quantity {
+    font-size: 14px;
+    color: var(--coffee-medium);
+    margin-bottom: 4px;
 }
 
 .product-expiry {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
 }

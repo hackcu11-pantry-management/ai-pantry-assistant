@@ -4,11 +4,19 @@
     border-radius: 1rem;
     border: none;
     padding: 1rem;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 2px 2px 8px rgba(58, 38, 24, 0.15);
     background-color: white;
-  }
+    border-top: 3px solid var(--coffee-medium);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-container:hover {
+    transform: translateY(-3px);
+    box-shadow: 2px 4px 12px rgba(58, 38, 24, 0.2);
+}
 
 .body-container {
-  padding: 1rem;
+    padding: 1rem;
+    color: var(--text-primary);
 }
   

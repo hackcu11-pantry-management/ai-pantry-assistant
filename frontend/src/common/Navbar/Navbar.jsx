@@ -25,14 +25,16 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
 
   const handleLogout = () => {
     if (onLogout) {
+      // Set local state immediately to prevent flashing content
+      setUserName("");
+      // Call the parent logout handler which will handle the redirect
       onLogout();
-      navigate("/");
     }
   };
 
   const handleHomeClick = (e) => {
     e.preventDefault();
-    navigate("/home", { state: { fromLogin: true } });
+    navigate("/", { state: { fromLogin: true } });
   };
 
   const handleSignIn = () => {
@@ -46,16 +48,14 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <Link to="/">AI Pantry Assistant</Link>
+        <Link to="/pantry">AI Pantry Assistant</Link>
       </div>
       <div className="navbar-links">
         {isLoggedIn ? (
           <>
-            <Link to="/home" onClick={handleHomeClick}>
-              Dashboard
-            </Link>
+            <Link to="/pantry">Pantry</Link>
             <Link to="/recipes">Recipes</Link>
-            <Link to="/profile">Profile</Link>
+            <Link to="/calendar">Calendar</Link>
             {userName && (
               <span className="user-greeting">Hello, {userName}</span>
             )}
@@ -65,14 +65,6 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
           </>
         ) : (
           <>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-            <Link to="/home" className="dev-link">
-              Dev: HomePage
-            </Link>
-            <Link to="/dev-login" className="dev-link">
-              Dev: Auto Login
-            </Link>
             <button className="login-button" onClick={handleSignIn}>
               Login
             </button>

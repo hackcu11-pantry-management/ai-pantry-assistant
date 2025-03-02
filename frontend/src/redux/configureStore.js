@@ -7,6 +7,7 @@ import userState from "./reducers/userReducer";
 import snackbarState from "./reducers/snackbarReducer";
 import productState from "./reducers/productReducer";
 import modalState from "./reducers/modalReducer";
+import recipeState from "./reducers/recipeReducer";
 
 const logger = createLogger({ collapsed: true, diff: true });
 
@@ -16,6 +17,7 @@ const store = configureStore({
     snackbarState,
     productState,
     modalState,
+    recipeState,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
 });

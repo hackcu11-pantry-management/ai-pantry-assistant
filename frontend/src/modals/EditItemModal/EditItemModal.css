@@ -1,0 +1,68 @@
+.edit-item-form {
+    width: 100%;
+  }
+  
+  .edit-item-form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .edit-item-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+  
+  .edit-item-form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+  }
+  
+  .edit-item-form-control:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  .edit-item-input-group {
+    display: flex;
+    align-items: center;
+  }
+  
+  .edit-item-input-group .edit-item-form-control {
+    flex: 1;
+  }
+  
+  .edit-item-input-group .edit-item-form-select {
+    margin-left: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+  }
+  
+  .edit-item-input-group .edit-item-form-select:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  .edit-item-text-danger {
+    color: #dc3545;
+  }
+  
+  .edit-item-border-danger {
+    border-color: #dc3545;
+  }
+
+  .edit-item-image {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-top: 1rem;
+  }
+  
+  .edit-item-image-content {
+    max-width: 150px;
+    max-height: 150px;
+    object-fit: contain;
+  }

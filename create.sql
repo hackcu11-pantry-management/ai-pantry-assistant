@@ -15,7 +15,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE products (
-    productUPC BIGSERIAL PRIMARY KEY,
+    productUPC BIGINT PRIMARY KEY,
     productName VARCHAR(255) NOT NULL,
     productDescription VARCHAR(550),
     productBrand VARCHAR (255),
@@ -34,7 +34,7 @@ CREATE TABLE products (
 CREATE TABLE usersProducts (
     pantryID SERIAL PRIMARY KEY,
     userID INT NOT NULL,
-    productUPC BIGSERIAL NOT NULL,
+    productUPC BIGINT NOT NULL,
     quantity FLOAT,
     quantityType VARCHAR(25),
     date_purchased DATE,
