@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { toggleModal } from "../../redux/actions/modalActions";
 
-const Modal = ({ modal_id, title, children, footerButtons }) => {
+const Modal = ({ modal_id, title, children, footerButtons, style }) => {
   const dispatch = useDispatch();
   const isOpen = useSelector((state) => state.modalState[modal_id]);
 
@@ -19,7 +19,19 @@ const Modal = ({ modal_id, title, children, footerButtons }) => {
   };
 
   return (
-    <Dialog open={isOpen} onClose={handleClose}>
+    <Dialog 
+      open={isOpen} 
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        style: {
+          ...style,
+          width: style?.width || '100%',
+          maxWidth: style?.maxWidth || '600px',
+        }
+      }}
+    >
       <DialogTitle>
         {title}
         <Divider sx={{ marginTop: 1 }} />

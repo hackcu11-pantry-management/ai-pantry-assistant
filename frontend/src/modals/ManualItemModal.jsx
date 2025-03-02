@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Modal } from "../common";
+import { Modal, Button } from "../common";
 import { toggleModal } from "../redux/actions/modalActions";
 import { addToPantry, addProduct } from "../redux/actions/productActions";
 
@@ -125,31 +125,72 @@ const ManualItemModal = () => {
     dispatch(toggleModal(modal_id));
   };
 
+  // Common button style to ensure consistent sizing
+  const buttonStyle = {
+    width: '80px',
+    padding: '8px 16px',
+    fontSize: '16px'
+  };
+
+  // Specific styles for each button
+  const cancelButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: '#dc3545',
+    borderColor: '#dc3545',
+    color: 'white',
+    transition: 'background-color 0.2s ease'
+  };
+
+  // Hover state for cancel button
+  const handleCancelHover = (e, isHover) => {
+    e.target.style.backgroundColor = isHover ? '#c82333' : '#dc3545';
+    e.target.style.borderColor = isHover ? '#bd2130' : '#dc3545';
+  };
+
+  // Custom footer with our Button component
+  const renderFooter = () => (
+    <div style={{ display: 'flex', justifyContent: 'right', gap: '12px', marginTop: '1rem' }}>
+      <button 
+        className="btn"
+        onClick={() => handleClose("manualItemModal")}
+        disabled={isSubmitting}
+        style={cancelButtonStyle}
+        onMouseEnter={(e) => handleCancelHover(e, true)}
+        onMouseLeave={(e) => handleCancelHover(e, false)}
+      >
+        Cancel
+      </button>
+      <button 
+        className="btn btn-primary"
+        onClick={addItemToPantry}
+        disabled={isSubmitting}
+        style={buttonStyle}
+      >
+        {isSubmitting ? "Saving..." : "Save"}
+      </button>
+    </div>
+  );
+
+  // Custom styles for responsive modal
+  const modalStyles = {
+    width: '100%',
+    maxWidth: '800px', // Increased width for larger screens
+    margin: '0 auto'
+  };
+
   return (
     <Modal
       modal_id="manualItemModal"
       title="Add Item"
-      footerButtons={[
-        {
-          text: "Cancel",
-          variant: "outlined",
-          onClick: () => handleClose("manualItemModal"),
-          disabled: isSubmitting,
-        },
-        {
-          text: isSubmitting ? "Saving..." : "Save",
-          variant: "contained",
-          onClick: () => addItemToPantry(),
-          disabled: isSubmitting,
-        },
-      ]}
+      footerButtons={[]}
+      style={modalStyles}
     >
-      <form className="product-form">
+      <form className="product-form" style={{ width: '100%' }}>
         <div className="text-center mb-4">
           <img 
             src={PLACEHOLDER_IMAGE} 
             alt="Food placeholder" 
-            style={{ maxWidth: "150px", maxHeight: "150px" }}
+            style={{ maxWidth: '150px', maxHeight: '150px' }}
             className="img-thumbnail"
           />
         </div>
@@ -252,6 +293,8 @@ const ManualItemModal = () => {
             onChange={handleChange}
           />
         </div>
+        
+        {renderFooter()}
       </form>
     </Modal>
   );
