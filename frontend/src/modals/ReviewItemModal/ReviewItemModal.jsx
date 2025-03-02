@@ -118,7 +118,7 @@ const ReviewItemModal = () => {
           disabled: isSubmitting,
         },
         {
-          text: isSubmitting ? "Saving..." : "Save",
+          text: "Save",
           variant: "contained",
           onClick: addItemToPantry,
           disabled: isSubmitting,

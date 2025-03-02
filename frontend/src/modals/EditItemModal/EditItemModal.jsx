@@ -143,7 +143,7 @@ const EditItemModal = () => {
           disabled: isSubmitting,
         },
         {
-          text: isSubmitting ? "Saving..." : "Save",
+          text: "Save",
           variant: "contained",
           onClick: updateItemInPantry,
           disabled: isSubmitting,
