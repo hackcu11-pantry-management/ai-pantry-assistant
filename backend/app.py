@@ -824,14 +824,14 @@ def login():
         data = request.get_json()
         
         # Validate required fields
-        if not data or 'email' not in data or 'password' not in data:
+        if not data or 'username' not in data or 'password' not in data:
             return jsonify({
                 'success': False,
                 'error': 'Email and password are required',
                 'status': 'VALIDATION_ERROR'
             }), 400
         
-        email = data['email']
+        username = data['username']
         password = data['password']
         
         # Get user from database
@@ -844,7 +844,7 @@ def login():
             }), 503
         
         cur = conn.cursor()
-        cur.execute("SELECT userID, username, password_hash FROM users WHERE email = %s", (email,))
+        cur.execute("SELECT userID, username, password_hash FROM users WHERE username = %s", (username,))
         user = cur.fetchone()
         
         # Check if user exists and password is correct
@@ -853,7 +853,7 @@ def login():
             conn.close()
             return jsonify({
                 'success': False,
-                'error': 'Invalid email or password',
+                'error': 'Invalid username or password',
                 'status': 'INVALID_CREDENTIALS'
             }), 401
         

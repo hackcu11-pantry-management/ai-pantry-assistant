@@ -8,7 +8,7 @@ const SignIn = ({ setIsLoggedIn }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [error, setError] = useState("");
@@ -28,7 +28,7 @@ const SignIn = ({ setIsLoggedIn }) => {
     setLoading(true);
 
     // Basic validation
-    if (!formData.email || !formData.password) {
+    if (!formData.username || !formData.password) {
       setError("Please fill in all fields");
       setLoading(false);
       return;
@@ -45,7 +45,7 @@ const SignIn = ({ setIsLoggedIn }) => {
         // Redirect to home page
         navigate("/home", { state: { fromLogin: true } });
       } else {
-        setError(response.error || "Invalid email or password");
+        setError(response.error || "Invalid username or password");
       }
     } catch (err) {
       setError(err.message || "An error occurred. Please try again.");
@@ -61,14 +61,14 @@ const SignIn = ({ setIsLoggedIn }) => {
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="username">Username</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="username"
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="Enter your username"
               required
             />
           </div>
