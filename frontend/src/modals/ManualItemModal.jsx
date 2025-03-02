@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { Modal, Button } from "../common";
 import { toggleModal } from "../redux/actions/modalActions";
 import { addToPantry, addProduct } from "../redux/actions/productActions";
+import { addSnackbar } from "../redux/actions/snackbarActions";
 
 import Tooltip from "@mui/material/Tooltip";
 import InfoIcon from "@mui/icons-material/Info";
@@ -73,8 +74,11 @@ const ManualItemModal = () => {
 
   const addItemToPantry = async () => {
     if (!formData.title || !formData.amount) {
-      // Show validation error
-      alert("Please enter a product name and quantity");
+      // Show validation error using snackbar instead of alert
+      dispatch(addSnackbar({
+        message: "Please enter a product name and quantity",
+        severity: "error",
+      }));
       return;
     }
 
@@ -114,8 +118,18 @@ const ManualItemModal = () => {
       
       // Close the modal on success
       handleClose("manualItemModal");
+      
+      // Show success message
+      dispatch(addSnackbar({
+        message: "Item added successfully",
+        severity: "success",
+      }));
     } catch (error) {
       console.error("Failed to add item:", error);
+      dispatch(addSnackbar({
+        message: error.message || "Failed to add item",
+        severity: "error",
+      }));
     } finally {
       setIsSubmitting(false);
     }
@@ -197,17 +211,20 @@ const ManualItemModal = () => {
 
         <div className="form-group mb-3">
           <label htmlFor="title" className="form-label">
-            Name
+            Name <span className="text-danger">*</span>
           </label>
           <input
             type="text"
             id="title"
             name="title"
-            className="form-control"
+            className={`form-control ${!formData.title ? 'border-danger' : ''}`}
             value={formData.title}
             onChange={handleChange}
             required
           />
+          {!formData.title && (
+            <small className="text-danger">Product name is required</small>
+          )}
         </div>
 
         <div className="form-group mb-3">
@@ -231,14 +248,14 @@ const ManualItemModal = () => {
 
         <div className="form-group mb-3">
           <label htmlFor="amount" className="form-label">
-            Amount
+            Amount <span className="text-danger">*</span>
           </label>
           <div className="input-group">
             <input
               type="number"
               id="amount"
               name="amount"
-              className="form-control"
+              className={`form-control ${!formData.amount ? 'border-danger' : ''}`}
               value={formData.amount}
               onChange={handleChange}
               required
@@ -258,6 +275,9 @@ const ManualItemModal = () => {
               <option value="lb">Pounds</option>
             </select>
           </div>
+          {!formData.amount && (
+            <small className="text-danger">Quantity is required</small>
+          )}
         </div>
 
         <div className="form-group mb-3">
