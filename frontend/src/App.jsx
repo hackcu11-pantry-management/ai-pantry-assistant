@@ -13,6 +13,8 @@ import LandingPage from "./pages/LandingPage/LandingPage";
 import ExamplePage from "./pages/ExamplePage";
 import HomePage from "./pages/HomePage/HomePage";
 
+import ModalProvider from "./ModalProvider";
+
 import Quagga from "quagga";
 
 import "./App.css";
@@ -166,6 +168,7 @@ function App() {
   return (
     <Router>
       <Navbar isLoggedIn={isLoggedIn} />
+      <ModalProvider />
       <div className="app-container">
         <Routes>
           <Route
