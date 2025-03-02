@@ -91,6 +91,9 @@ const BarcodeScanner = () => {
             currency: item.currency || item.productcurrency || "USD",
             images: item.images || item.productimages || [],
             upc: item.upc || item.productupc || cleanedUPC,
+            purchaseDate: item.purchaseDate || item.productpurchaseDate || "",
+            expiryDate: item.expiryDate || item.productexpiryDate || "",
+            
           };
 
           console.log("Mapped Product Data:", mappedData);
