@@ -340,17 +340,17 @@ def call_upc_api(upc):
             time.sleep(wait_time)
             request_count = 0
     
-    # Make the API call - try both authentication methods
+    # Make the API call with Bearer token authentication
     base_url = 'https://go-upc.com/api/v1/code'
     
-    # First try with query parameter
     try:
-        url = f'{base_url}/{upc}?key={GOUPC_API_KEY}'
-        print(f"Attempting API call to: {url}")  # Debug log
+        url = f'{base_url}/{upc}'
+        print(f"Attempting API call with Bearer token to: {url}")  # Debug log
         
         response = requests.get(
             url,
             headers={
+                'Authorization': f'Bearer {GOUPC_API_KEY}',
                 'Accept': 'application/json'
             },
             timeout=10
@@ -373,6 +373,7 @@ def call_upc_api(upc):
             response = requests.get(
                 url,
                 headers={
+                    'Authorization': f'Bearer {GOUPC_API_KEY}',
                     'Accept': 'application/json'
                 },
                 timeout=10
@@ -382,32 +383,8 @@ def call_upc_api(upc):
         return response
         
     except requests.exceptions.RequestException as e:
-        print(f"API request error with query parameter method: {e}")
-        
-        # Try with Bearer token as fallback
-        try:
-            url = f'{base_url}/{upc}'
-            print(f"Attempting API call with Bearer token to: {url}")  # Debug log
-            
-            response = requests.get(
-                url,
-                headers={
-                    'Authorization': f'Bearer {GOUPC_API_KEY}',
-                    'Accept': 'application/json'
-                },
-                timeout=10
-            )
-            
-            # Log the response for debugging
-            print(f"Bearer token API Response Status: {response.status_code}")
-            if response.status_code != 200:
-                print(f"Bearer token API Error Response: {response.text}")
-            
-            return response
-            
-        except requests.exceptions.RequestException as e:
-            print(f"API request error with Bearer token method: {e}")
-            return None
+        print(f"API request error: {e}")
+        return None
 
 def validate_upc(upc):
     """Validate UPC format"""
