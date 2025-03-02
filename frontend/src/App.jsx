@@ -12,7 +12,6 @@ import { Navbar } from "./common";
 
 import LandingPage from "./pages/LandingPage/LandingPage";
 import ExamplePage from "./pages/ExamplePage";
-import HomePage from "./pages/HomePage/HomePage";
 import RecipePage from "./pages/RecipePage/RecipePage";
 import { SignIn, SignUp } from "./pages/Auth"; // Make sure this import is correct
 import ForgotPassword from "./pages/Auth/ForgotPassword";
@@ -30,7 +29,7 @@ const DevAutoLogin = ({ setIsLoggedIn }) => {
   useEffect(() => {
     // Set logged in and redirect to home
     setIsLoggedIn(true);
-    navigate("/home", { state: { fromLogin: true } });
+    navigate("/", { state: { fromLogin: true } });
   }, [setIsLoggedIn, navigate]);
 
   return <div className="container text-center mt-5">Logging in...</div>;
@@ -93,7 +92,6 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected routes */}
-          <Route path="/home" element={<HomePage />} />
           <Route path="/recipes" element={<RecipePage />} />
           <Route path="/calendar" element={<CalendarPage />} />
 
