@@ -4,10 +4,12 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Modal } from "../common";
 import { toggleModal } from "../redux/actions/modalActions";
+import { addToPantry } from "../redux/actions/productActions";
 
 const ReviewItemModal = () => {
   const dispatch = useDispatch();
   const selectedItem = useSelector((state) => state.productState?.selected) ?? {};
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: selectedItem.title || "",
@@ -35,6 +37,31 @@ const ReviewItemModal = () => {
     }));
   };
 
+  const addItemToPantry = () => {
+    const payload = {
+      productUPC: String(selectedItem.upc || ""),  // Ensure UPC is always a string
+      quantity: Number(formData.amount) || 1,
+      quantityType: formData.unit,
+      date_purchased: formData.purchaseDate,
+      expiration_date: formData.expiryDate
+    };
+    
+    if(payload.productUPC && payload.quantity) {
+      console.log("payload", payload);
+      setIsSubmitting(true);
+      dispatch(addToPantry(payload))
+        .then(() => {
+          handleClose("reviewItemModal");
+        })
+        .catch((error) => {
+          console.error("Failed to add item to pantry:", error);
+        })
+        .finally(() => {
+          setIsSubmitting(false);
+        });
+    }
+  }
+
   const handleClose = (modal_id) => {
     dispatch(toggleModal(modal_id));
   };
@@ -48,11 +75,13 @@ const ReviewItemModal = () => {
           text: "Cancel",
           variant: "outlined",
           onClick: () => handleClose("reviewItemModal"),
+          disabled: isSubmitting
         },
         {
-          text: "Save",
+          text: isSubmitting ? "Saving..." : "Save",
           variant: "contained",
-          onClick: () => console.log("Submit functionality to be implemented"),
+          onClick: () => addItemToPantry(),
+          disabled: isSubmitting
         },
       ]}
     >
