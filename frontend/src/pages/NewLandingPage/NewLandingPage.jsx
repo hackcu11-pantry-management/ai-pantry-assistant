@@ -89,10 +89,19 @@ export default function ScrollLinked() {
           textAlign: "center",
         }}
       >
-        <h1 style={{ fontSize: "3rem", marginBottom: "15px", color: "white" }}>
+        <h1 style={{ 
+          fontSize: "3rem", 
+          marginBottom: "15px", 
+          color: "white",
+          textShadow: "4px 4px 8px rgba(0, 0, 0, 0.8)" // Added text shadow
+        }}>
           Welcome to PantryAI
         </h1>
-        <p style={{ fontSize: "1.2rem", color: "white" }}>
+        <p style={{ 
+          fontSize: "1.2rem", 
+          color: "white",
+          textShadow: "2px 2px 5px rgba(0, 0, 0, 0.8)" // Added text shadow
+        }}>
           Your one stop shop to stopping food waste
         </p>
       </motion.div>
@@ -133,6 +142,7 @@ export default function ScrollLinked() {
  */
 function Content() {
   // Hardcoded dark colors for the cards
+  const navigate = useNavigate();
 
   const foodWasteFacts = [
     "In the U.S., 30-40% of the food supply is wasted, which is more than 133 billion pounds of food per year.",
@@ -146,10 +156,10 @@ function Content() {
 
   // Hardcoded color order for each row (to make it look random)
   const colorOrder = [
-    ["#228B22", "#800000", "#000080", "#2E8B57"], // Row 1 colors
-    ["#2E8B57", "#228B22", "#800000", "#000080"], // Row 2 colors
-    ["#800000", "#000080", "#2E8B57", "#228B22"], // Row 3 colors
-    ["#000080", "#2E8B57", "#228B22", "#800000"], // Row 4 colors
+    ["var(--coffee-medium)", "var(--coffee-dark)", "var(--accent-primary)", "var(--coffee-light)"],
+    ["var(--accent-secondary)", "var(--success)", "var(--coffee-espresso)", "var(--warning)"],
+    ["var(--error)", "var(--coffee-light)", "var(--coffee-medium)", "var(--coffee-dark)"],
+    ["var(--coffee-dark)", "var(--accent-primary)", "var(--accent-secondary)", "var(--success)"],
   ];
 
   // Hardcoded dimensions for each card [width, height]
@@ -211,6 +221,8 @@ function Content() {
             {/* Cards in the Row */}
             {[0, 1, 2, 3].map((card, cardIndex) => {
               const dimensionIndex = rowIndex * 4 + cardIndex; // Calculate index for dimensions
+              const isLoginCard = rowIndex === 2 && cardIndex === 1;
+              const isSignupCard = rowIndex === 2 && cardIndex === 2;
               return (
                 <div
                   key={cardIndex}
@@ -225,13 +237,96 @@ function Content() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    cursor: (isLoginCard || isSignupCard) ? "pointer" : "default",
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    ...(isLoginCard || isSignupCard) && {
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: "0 8px 15px rgba(0, 0, 0, 0.2)",
+                      }
+                    }
+                  }}
+                  onClick={() => {
+                    if (isLoginCard) navigate("/signin");
+                    if (isSignupCard) navigate("/signup");
                   }}
                 >
                   {/* Add text to the specified card in the row */}
                   {cardIndex === textPlacement[rowIndex] && (
                     <div>
-                      <h3>Fact {rowIndex + 1}</h3>
                       <p>{foodWasteFacts[rowIndex]}</p>
+                    </div>
+                  )}
+                  
+                  {/* Add login button to row 3, card 2 */}
+                  {isLoginCard && (
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ 
+                        fontSize: "24px", 
+                        marginBottom: "15px",
+                        fontWeight: "bold" 
+                      }}>
+                        Already a member?
+                      </div>
+                      <button
+                        style={{
+                          backgroundColor: "var(--coffee-dark)",
+                          color: "white",
+                          border: "2px solid white",
+                          padding: "10px 20px",
+                          borderRadius: "6px",
+                          fontSize: "16px",
+                          fontWeight: "bold",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease"
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--coffee-espresso)";
+                          e.currentTarget.style.transform = "scale(1.05)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--coffee-dark)";
+                          e.currentTarget.style.transform = "scale(1)";
+                        }}
+                      >
+                        Log In
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Add signup button to row 3, card 3 */}
+                  {isSignupCard && (
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ 
+                        fontSize: "24px", 
+                        marginBottom: "15px",
+                        fontWeight: "bold" 
+                      }}>
+                        New to PantryAI?
+                      </div>
+                      <button
+                        style={{
+                          backgroundColor: "var(--accent-primary)",
+                          color: "white",
+                          border: "2px solid white",
+                          padding: "10px 20px",
+                          borderRadius: "6px",
+                          fontSize: "16px",
+                          fontWeight: "bold",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease"
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--accent-secondary)";
+                          e.currentTarget.style.transform = "scale(1.05)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--accent-primary)";
+                          e.currentTarget.style.transform = "scale(1)";
+                        }}
+                      >
+                        Register
+                      </button>
                     </div>
                   )}
                 </div>
