@@ -1,6 +1,6 @@
 /** @module LandingPage.css */
 
-.page-container {
+.landing-page {
     padding: 20px;
     background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary));
     min-height: calc(100vh - 110px); /* Account for navbar and padding */

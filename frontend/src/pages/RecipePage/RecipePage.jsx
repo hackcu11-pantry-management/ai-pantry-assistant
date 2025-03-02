@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import "./RecipePage.css";
 import PizzaImageLoadingScreen from "../../PizzaLoader/PizzaImageLoadingScreen";
 import { setRecipes } from "../../redux/actions/recipeActions";
@@ -10,6 +11,7 @@ import { updatePantryItems } from "../../redux/actions/productActions";
 
 const RecipePage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -126,7 +128,8 @@ const RecipePage = () => {
           }));
           
           // Redirect to the landing page (pantry)
-          window.location.href = "/";
+          
+          navigate("/pantry");
         }
       } else {
         throw new Error(data.error || "Failed to cook recipe");

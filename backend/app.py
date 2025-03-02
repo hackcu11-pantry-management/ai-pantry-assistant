@@ -133,7 +133,7 @@ def get_days_to_expire(product_data):
         prompt = f"""You are a food expiration expert. Your task is to analyze product information and output ONLY a number representing days until expiry, or "n/a" for non-perishable items.
         Rules:
         1. Output ONLY a number (no text, units, or explanation) representing days until expiry
-        2. Output ONLY "n/a" for non-perishable items or items with 2+ year shelf life
+        2. Output ONLY "n/a" for non-perishable items
         3. If uncertain, use conservative estimates based on product category
         4. Consider these general guidelines:
         - Fresh produce: 3-14 days
@@ -154,7 +154,7 @@ def get_days_to_expire(product_data):
                 {"role": "system", "content": "You are a precise food expiration expert, creating data for analysis. You only respond with numbers or 'n/a'."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7,
+            temperature=1,
             max_tokens=10
         )
         return response.choices[0].message.content.strip()
