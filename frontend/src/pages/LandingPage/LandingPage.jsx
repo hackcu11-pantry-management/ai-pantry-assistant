@@ -88,20 +88,13 @@ const LandingPage = () => {
           text="Pantry Items"
           buttons={[
             {
-              text: "Add Item",
-              onClick: () => handleOpenModal("addItemModal"),
-              variant: "contained",
-            },
-            {
-              text: "Remove Item",
+              text: "Scan Item",
               onClick: () => handleOpenModal("scanItemModal"),
               variant: "contained",
             },
             {
-              text: isAuthenticated ? "Refresh" : "Login",
-              onClick: () => isAuthenticated 
-                ? dispatch(getUserPantry()) 
-                : handleOpenModal("loginModal"),
+              text: "Manual Add",
+              onClick: () => handleOpenModal("manualItemModal"),
               variant: "contained",
             },
           ]}
