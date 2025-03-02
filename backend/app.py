@@ -164,14 +164,33 @@ def get_days_to_expire(product_data):
 
 def get_db_connection():
     try:
-        conn = psycopg2.connect(
-            dbname=os.getenv('DB_NAME', 'pantrydatabase'),
-            user=os.getenv('DB_USER', 'postgres'),
-            password=os.getenv('DB_PASSWORD', 'postgres'),
-            host=os.getenv('DB_HOST', 'localhost'),
-            port=os.getenv('DB_PORT', '5432')
-        )
-        return conn
+        # Check if running on Railway
+        if os.getenv('RAILWAY_ENVIRONMENT'):
+            # Use Railway's provided DATABASE_URL if available
+            database_url = os.getenv('DATABASE_URL')
+            if database_url:
+                conn = psycopg2.connect(database_url)
+                return conn
+            
+            # If DATABASE_URL is not available, use individual Railway PostgreSQL environment variables
+            conn = psycopg2.connect(
+                dbname=os.getenv('PGDATABASE'),
+                user=os.getenv('PGUSER'),
+                password=os.getenv('PGPASSWORD'),
+                host=os.getenv('PGHOST'),
+                port=os.getenv('PGPORT', '5432')  # Ensure port is a string
+            )
+            return conn
+        else:
+            # Local development environment
+            conn = psycopg2.connect(
+                dbname=os.getenv('DB_NAME', 'pantrydatabase'),
+                user=os.getenv('DB_USER', 'postgres'),
+                password=os.getenv('DB_PASSWORD', 'postgres'),
+                host=os.getenv('DB_HOST', 'localhost'),
+                port=os.getenv('DB_PORT', '5432')
+            )
+            return conn
     except Exception as e:
         print(f"Database connection error: {e}")
         return None
