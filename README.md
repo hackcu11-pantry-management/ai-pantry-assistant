@@ -1,7 +1,5 @@
 # AI Pantry Assistant
 
-![AI Pantry Assistant Logo](https://via.placeholder.com/150)
-
 ## Overview
 
 AI Pantry Assistant is a smart kitchen management system that helps you track your pantry inventory, monitor expiration dates, and generate recipe suggestions based on what you have on hand. The application uses barcode scanning, AI-powered recipe generation, and expiration date tracking to reduce food waste and simplify meal planning.
