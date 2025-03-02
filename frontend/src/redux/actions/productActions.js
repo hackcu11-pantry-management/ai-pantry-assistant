@@ -104,6 +104,9 @@ export const addToPantry = (pantryData) => (dispatch, getState) => {
     },
     body: JSON.stringify(pantryData),
   })
+    .then(() => {
+      dispatch(getUserPantry());
+    })
     .then((response) => {
       dispatch(
         addSnackbar({
