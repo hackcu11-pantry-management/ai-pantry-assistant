@@ -1,12 +1,12 @@
 /** @module BarcodeScanner.jsx */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import Quagga from "quagga";
 import { selectProduct } from "../../redux/actions/productActions";
 import { useDispatch } from "react-redux";
 import { toggleModal } from "../../redux/actions/modalActions";
 
-const BarcodeScanner = () => {
+const BarcodeScanner = forwardRef(({ autoStart }, ref) => {
   const dispatch = useDispatch();
 
   const [scanning, setScanning] = useState(false);
@@ -15,6 +15,11 @@ const BarcodeScanner = () => {
   const [isLoading, setIsLoading] = useState(false);
   const scannerRef = useRef(null);
   const quaggaInitialized = useRef(false);
+
+  useImperativeHandle(ref, () => ({
+    startScanner,
+    stopScanner,
+  }));
 
   // Validate UPC code format
   const isValidUPC = (code) => {
@@ -194,6 +199,13 @@ const BarcodeScanner = () => {
     setScanning(false);
   };
 
+  // Start the scanner automatically if autoStart is true
+  useEffect(() => {
+    if (autoStart) {
+      startScanner();
+    }
+  }, [autoStart]);
+
   // Clean up when component unmounts
   useEffect(() => {
     return () => {
@@ -248,6 +260,6 @@ const BarcodeScanner = () => {
       )}
     </div>
   );
-};
+});
 
 export default BarcodeScanner;
