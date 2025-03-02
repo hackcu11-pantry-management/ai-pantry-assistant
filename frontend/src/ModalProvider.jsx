@@ -7,6 +7,7 @@ import Modal from "./common/Modal/Modal";
 import { toggleModal } from "./redux/actions/modalActions";
 
 import ScanItemModal from "./modals/ScanItemModal/ScanItemModal";
+import ReviewItemModal from "./modals/ReviewItemModal";
 
 const ModalProvider = () => {
   const dispatch = useDispatch();
@@ -31,7 +32,7 @@ const ModalProvider = () => {
         <p>This is the Add Item modal content.</p>
       </Modal>
       <ScanItemModal />
-      {/* Add more modals here as needed */}
+      <ReviewItemModal />
     </>
   );
 };

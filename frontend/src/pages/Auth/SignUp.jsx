@@ -69,11 +69,11 @@ const SignUp = ({ setIsLoggedIn }) => {
 
       // Call the signup action
       const response = await dispatch(signup(signupData));
-      
+
       if (response.success) {
         // Update local auth state
         setIsLoggedIn(true);
-        
+
         // Redirect to home page
         navigate("/home", { state: { fromLogin: true } });
       } else {

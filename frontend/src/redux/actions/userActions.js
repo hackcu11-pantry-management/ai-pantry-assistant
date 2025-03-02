@@ -57,14 +57,14 @@ export const login = (loginData) => (dispatch) => {
           addSnackbar({
             message: "Login successful",
             severity: "success",
-          })
+          }),
         );
       } else {
         dispatch(
           addSnackbar({
             message: response.error || "Login failed",
             severity: "error",
-          })
+          }),
         );
       }
       return response;
@@ -74,7 +74,7 @@ export const login = (loginData) => (dispatch) => {
         addSnackbar({
           message: error.message || "Login failed",
           severity: "error",
-        })
+        }),
       );
       throw error;
     });
@@ -107,14 +107,14 @@ export const signup = (signupData) => (dispatch) => {
           addSnackbar({
             message: "Signup successful",
             severity: "success",
-          })
+          }),
         );
       } else {
         dispatch(
           addSnackbar({
             message: response.error || "Signup failed",
             severity: "error",
-          })
+          }),
         );
       }
       return response;
@@ -124,7 +124,7 @@ export const signup = (signupData) => (dispatch) => {
         addSnackbar({
           message: error.message || "Signup failed",
           severity: "error",
-        })
+        }),
       );
       throw error;
     });
@@ -140,6 +140,6 @@ export const logout = () => (dispatch) => {
     addSnackbar({
       message: "Logged out successfully",
       severity: "success",
-    })
+    }),
   );
 };
