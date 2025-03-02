@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-
 import {
   BrowserRouter as Router,
   Routes,
   Route,
+  useLocation,
+  Navigate,
   useNavigate,
 } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 
 import { Navbar, SnackbarProvider } from "./common";
 
-import LandingPage from "./pages/LandingPage/LandingPage";
-import ExamplePage from "./pages/ExamplePage";
-import RecipePage from "./pages/RecipePage/RecipePage";
-import { SignIn, SignUp } from "./pages/Auth"; // Make sure this import is correct
-import ForgotPassword from "./pages/Auth/ForgotPassword";
+import { SignIn, SignUp } from "./pages/Auth";
 import CalendarPage from "./pages/CalendarPage/CalendarPage";
+import ExamplePage from "./pages/ExamplePage";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
+import LandingPage from "./pages/LandingPage/LandingPage";
+import NewLandingPage from "./pages/NewLandingPage/NewLandingPage";
+import RecipePage from "./pages/RecipePage/RecipePage";
 
 import ModalProvider from "./ModalProvider";
-
 import "./App.css";
 import { logout, addLoginAuthentication } from "./redux/actions/userActions";
 
@@ -35,6 +36,14 @@ const DevAutoLogin = ({ setIsLoggedIn }) => {
   return <div className="container text-center mt-5">Logging in...</div>;
 };
 
+const ProtectedRoute = ({ isLoggedIn, children }) => {
+  if (!isLoggedIn) {
+    // Redirect to the new landing page if the user is not logged in
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
 function App() {
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -44,8 +53,8 @@ function App() {
 
   // Check for existing user session on app load
   useEffect(() => {
-    // If we have a loginResult from Redux, use that
-    if (loginResult) {
+    const user = localStorage.getItem("user");
+    if (user) {
       setIsLoggedIn(true);
     } else {
       // Check localStorage as fallback
@@ -92,18 +101,27 @@ function App() {
     );
   }
 
+  const MainLayout = ({ children }) => {
+    const location = useLocation();
+    const isLandingPage = location.pathname === "/";
+    console.log(isLandingPage);
+  
+    return (
+      <div>
+        {!isLandingPage && <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />}
+        {children}
+      </div>
+    );
+  };
+
   return (
     <Router>
       <ModalProvider />
+      <MainLayout>
       <SnackbarProvider />
-      <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
       <div className="app-container">
         <Routes>
           {/* Public routes */}
-          <Route
-            path="/"
-            element={<LandingPage setIsLoggedIn={setIsLoggedIn} />}
-          />
           <Route
             path="/signin"
             element={<SignIn setIsLoggedIn={setIsLoggedIn} />}
@@ -112,11 +130,37 @@ function App() {
             path="/signup"
             element={<SignUp setIsLoggedIn={setIsLoggedIn} />}
           />
+          <Route
+            path="/"
+            element={<NewLandingPage setIsLoggedIn={setIsLoggedIn} />}
+          />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected routes */}
-          <Route path="/recipes" element={<RecipePage />} />
-          <Route path="/calendar" element={<CalendarPage />} />
+          <Route
+            path="/pantry"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <LandingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recipes"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <RecipePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <CalendarPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Development routes */}
           <Route path="/ex" element={<ExamplePage />} />
@@ -125,7 +169,8 @@ function App() {
             element={<DevAutoLogin setIsLoggedIn={setIsLoggedIn} />}
           />
         </Routes>
-      </div>
+        </div>
+      </MainLayout>
     </Router>
   );
 }

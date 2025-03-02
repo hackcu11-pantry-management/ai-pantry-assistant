@@ -1,4 +1,5 @@
 
+
 DROP TABLE IF EXISTS usersProducts;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS products;
@@ -41,6 +42,9 @@ CREATE TABLE usersProducts (
     FOREIGN KEY (userID) REFERENCES users(userID),
     FOREIGN KEY (productUPC) REFERENCES products(productUPC)
 );
+
+
+
 
 GRANT ALL PRIVILEGES ON TABLE products TO postgres;
 GRANT ALL PRIVILEGES ON TABLE users TO postgres;

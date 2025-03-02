@@ -1,6 +1,7 @@
 .app-container {
   min-height: calc(100vh - 70px); /* Adjust based on navbar height */
   padding-top: 20px;
+  /* background-color: #3a2618;  BRANDONs*/
   background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
 }
 

@@ -48,12 +48,12 @@ const Navbar = ({ isLoggedIn, onLogout }) => {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <Link to="/">AI Pantry Assistant</Link>
+        <Link to="/pantry">AI Pantry Assistant</Link>
       </div>
       <div className="navbar-links">
         {isLoggedIn ? (
           <>
-            <Link to="/">Pantry</Link>
+            <Link to="/pantry">Pantry</Link>
             <Link to="/recipes">Recipes</Link>
             <Link to="/calendar">Calendar</Link>
             {userName && (

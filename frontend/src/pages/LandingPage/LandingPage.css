@@ -23,7 +23,6 @@
 }
 
 .login-button {
-    margin-top: 15px;
     background-color: var(--coffee-medium);
     color: var(--text-light);
     border: none;
