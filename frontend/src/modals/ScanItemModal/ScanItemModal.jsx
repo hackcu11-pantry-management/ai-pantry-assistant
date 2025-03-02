@@ -17,7 +17,7 @@ const ScanItemModal = () => {
     <Modal
       modal_id="scanItemModal"
       title="Scan Item"
-      footerButtons={[
+      buttons={[
         {
           text: "Close",
           variant: "contained",

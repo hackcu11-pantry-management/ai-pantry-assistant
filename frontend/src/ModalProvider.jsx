@@ -7,9 +7,9 @@ import Modal from "./common/Modal/Modal";
 import { toggleModal } from "./redux/actions/modalActions";
 
 import ScanItemModal from "./modals/ScanItemModal/ScanItemModal";
-import ReviewItemModal from "./modals/ReviewItemModal";
-import ManualItemModal from "./modals/ManualItemModal";
-import EditItemModal from "./modals/EditItemModal";
+import ReviewItemModal from "./modals/ReviewItemModal/ReviewItemModal";
+import ManualItemModal from "./modals/ManualItemModal/ManualItemModal";
+import EditItemModal from "./modals/EditItemModal/EditItemModal";
 
 const ModalProvider = () => {
   const dispatch = useDispatch();

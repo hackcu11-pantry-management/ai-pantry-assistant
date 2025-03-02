@@ -33,10 +33,12 @@ const BarcodeScanner = () => {
     const cleanedUPC = cleanUPC(upc);
     if (!isValidUPC(cleanedUPC)) {
       setError("Invalid UPC code format. Please try scanning again.");
-      dispatch(addSnackbar({
-        message: "Invalid UPC code format. Please try scanning again.",
-        severity: "warning"
-      }));
+      dispatch(
+        addSnackbar({
+          message: "Invalid UPC code format. Please try scanning again.",
+          severity: "warning",
+        }),
+      );
       setIsLoading(false);
       startScanner(); // Restart scanner on invalid UPC
       return;
@@ -88,10 +90,12 @@ const BarcodeScanner = () => {
       .catch((err) => {
         const errorMessage = `Error looking up product: ${err.message}`;
         setError(errorMessage);
-        dispatch(addSnackbar({
-          message: errorMessage,
-          severity: "error"
-        }));
+        dispatch(
+          addSnackbar({
+            message: errorMessage,
+            severity: "error",
+          }),
+        );
         startScanner(); // Restart scanner on API error
       })
       .finally(() => {
@@ -152,10 +156,12 @@ const BarcodeScanner = () => {
             console.error("Quagga initialization failed:", err);
             const errorMessage = `Failed to initialize scanner: ${err.message || "Unknown error"}`;
             setError(errorMessage);
-            dispatch(addSnackbar({
-              message: errorMessage,
-              severity: "error"
-            }));
+            dispatch(
+              addSnackbar({
+                message: errorMessage,
+                severity: "error",
+              }),
+            );
           }
         },
       );
@@ -191,7 +197,7 @@ const BarcodeScanner = () => {
           style={{ color: "red", margin: "10px 0" }}
         >
           {error}
-          <button 
+          <button
             onClick={startScanner}
             style={{
               display: "block",
@@ -201,7 +207,7 @@ const BarcodeScanner = () => {
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
           >
             Try Again

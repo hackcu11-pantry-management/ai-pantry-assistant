@@ -5,7 +5,10 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { Card, CardHeader, DetailLine, ProductGrid } from "../../common";
 import { toggleModal } from "../../redux/actions/modalActions";
-import { getUserPantry, selectProduct } from "../../redux/actions/productActions";
+import {
+  getUserPantry,
+  selectProduct,
+} from "../../redux/actions/productActions";
 
 import "./LandingPage.css";
 

@@ -7,9 +7,12 @@ import { removeSnackbar } from "../../redux/actions/snackbarActions";
 
 const SnackbarProvider = () => {
   const dispatch = useDispatch();
-  const { open, message, severity, autoHideDuration = 6000 } = useSelector(
-    (state) => state.snackbarState
-  );
+  const {
+    open,
+    message,
+    severity,
+    autoHideDuration = 6000,
+  } = useSelector((state) => state.snackbarState);
 
   const handleClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -37,4 +40,4 @@ const SnackbarProvider = () => {
   );
 };
 
-export default SnackbarProvider; 
+export default SnackbarProvider;

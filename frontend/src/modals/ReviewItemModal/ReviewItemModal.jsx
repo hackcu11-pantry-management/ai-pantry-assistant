@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Modal } from "../common";
-import { toggleModal } from "../redux/actions/modalActions";
-import { addToPantry } from "../redux/actions/productActions";
-import { addSnackbar } from "../redux/actions/snackbarActions";
-
+import { Modal } from "../../common";
+import { toggleModal } from "../../redux/actions/modalActions";
+import { addToPantry } from "../../redux/actions/productActions";
+import { addSnackbar } from "../../redux/actions/snackbarActions";
 import Tooltip from "@mui/material/Tooltip";
 import InfoIcon from "@mui/icons-material/Info";
+import "./ReviewItemModal.css";
 
 const ReviewItemModal = () => {
   const dispatch = useDispatch();
@@ -45,18 +45,23 @@ const ReviewItemModal = () => {
   const addItemToPantry = () => {
     // Validate required fields
     if (!formData.title || !formData.amount) {
-      dispatch(addSnackbar({
-        message: "Please enter a product name and quantity",
-        severity: "error",
-      }));
+      dispatch(
+        addSnackbar({
+          message: "Please enter a product name and quantity",
+          severity: "error",
+        }),
+      );
       return; // Keep modal open so user can fix the issues
     }
 
     if (!selectedItem || !selectedItem.upc) {
-      dispatch(addSnackbar({
-        message: "Product information is incomplete. Please try scanning again.",
-        severity: "error",
-      }));
+      dispatch(
+        addSnackbar({
+          message:
+            "Product information is incomplete. Please try scanning again.",
+          severity: "error",
+        }),
+      );
       // Close review modal and reopen scan modal to let user try again
       handleClose("reviewItemModal");
       dispatch(toggleModal("scanItemModal"));
@@ -77,17 +82,21 @@ const ReviewItemModal = () => {
       .then(() => {
         handleClose("reviewItemModal");
         // Show success message
-        dispatch(addSnackbar({
-          message: "Item added successfully",
-          severity: "success",
-        }));
+        dispatch(
+          addSnackbar({
+            message: "Item added successfully",
+            severity: "success",
+          }),
+        );
       })
       .catch((error) => {
         console.error("Failed to add item to pantry:", error);
-        dispatch(addSnackbar({
-          message: error.message || "Failed to add item to pantry",
-          severity: "error",
-        }));
+        dispatch(
+          addSnackbar({
+            message: error.message || "Failed to add item to pantry",
+            severity: "error",
+          }),
+        );
         // Don't close modal on error, let user try again
         setIsSubmitting(false);
       });
@@ -97,106 +106,66 @@ const ReviewItemModal = () => {
     dispatch(toggleModal(modal_id));
   };
 
-  // Common button style to ensure consistent sizing
-  const buttonStyle = {
-    width: '80px',
-    padding: '8px 16px',
-    fontSize: '16px'
-  };
-
-  // Specific styles for each button
-  const cancelButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: '#dc3545',
-    borderColor: '#dc3545',
-    color: 'white',
-    transition: 'background-color 0.2s ease'
-  };
-
-  // Hover state for cancel button
-  const handleCancelHover = (e, isHover) => {
-    e.target.style.backgroundColor = isHover ? '#c82333' : '#dc3545';
-    e.target.style.borderColor = isHover ? '#bd2130' : '#dc3545';
-  };
-
-  // Custom footer with our Button component
-  const renderFooter = () => (
-    <div style={{ display: 'flex', justifyContent: 'right', gap: '12px', marginTop: '1rem' }}>
-      <button 
-        className="btn"
-        onClick={() => handleClose("reviewItemModal")}
-        disabled={isSubmitting}
-        style={cancelButtonStyle}
-        onMouseEnter={(e) => handleCancelHover(e, true)}
-        onMouseLeave={(e) => handleCancelHover(e, false)}
-      >
-        Cancel
-      </button>
-      <button 
-        className="btn btn-primary"
-        onClick={addItemToPantry}
-        disabled={isSubmitting}
-        style={buttonStyle}
-      >
-        {isSubmitting ? "Saving..." : "Save"}
-      </button>
-    </div>
-  );
-
-  // Custom styles for responsive modal
-  const modalStyles = {
-    width: '100%',
-    maxWidth: '800px', // Increased width for larger screens
-    margin: '0 auto'
-  };
-
   return (
     <Modal
       modal_id="reviewItemModal"
       title="Add Item"
-      footerButtons={[]}
-      style={modalStyles}
+      buttons={[
+        {
+          text: "Cancel",
+          variant: "outlined",
+          onClick: () => handleClose("reviewItemModal"),
+          disabled: isSubmitting,
+        },
+        {
+          text: isSubmitting ? "Saving..." : "Save",
+          variant: "contained",
+          onClick: addItemToPantry,
+          disabled: isSubmitting,
+        },
+      ]}
     >
-      <form className="product-form" style={{ width: '100%' }}>
+      <form className="review-item-form">
         {selectedItem.images && selectedItem.images.length > 0 && (
-          <div className="text-center mb-4">
+          <div className="review-item-image">
             <img
               src={selectedItem.images[0]}
               alt={selectedItem.title}
-              style={{ maxWidth: '150px', maxHeight: '150px' }}
-              className="img-thumbnail"
+              className="review-item-image-content"
             />
           </div>
         )}
 
-        <div className="form-group mb-3">
-          <label htmlFor="title" className="form-label">
-            Name <span className="text-danger">*</span>
+        <div className="review-item-form-group">
+          <label htmlFor="title" className="review-item-form-label">
+            Name <span className="review-item-text-danger">*</span>
           </label>
           <input
             type="text"
             id="title"
             name="title"
-            className={`form-control ${!formData.title ? 'border-danger' : ''}`}
+            className={`review-item-form-control ${!formData.title ? "review-item-border-danger" : ""}`}
             value={formData.title}
             onChange={handleChange}
             required
           />
           {!formData.title && (
-            <small className="text-danger">Product name is required</small>
+            <small className="review-item-text-danger">
+              Product name is required
+            </small>
           )}
         </div>
 
-        <div className="form-group mb-3">
-          <label htmlFor="amount" className="form-label">
-            Amount <span className="text-danger">*</span>
+        <div className="review-item-form-group">
+          <label htmlFor="amount" className="review-item-form-label">
+            Amount <span className="review-item-text-danger">*</span>
           </label>
-          <div className="input-group">
+          <div className="review-item-input-group">
             <input
               type="number"
               id="amount"
               name="amount"
-              className={`form-control ${!formData.amount ? 'border-danger' : ''}`}
+              className={`review-item-form-control ${!formData.amount ? "review-item-border-danger" : ""}`}
               value={formData.amount}
               onChange={handleChange}
               required
@@ -205,7 +174,7 @@ const ReviewItemModal = () => {
               name="unit"
               value={formData.unit}
               onChange={handleChange}
-              className="form-select"
+              className="review-item-form-select"
             >
               <option value="units">Units</option>
               <option value="g">Grams</option>
@@ -217,26 +186,28 @@ const ReviewItemModal = () => {
             </select>
           </div>
           {!formData.amount && (
-            <small className="text-danger">Quantity is required</small>
+            <small className="review-item-text-danger">
+              Quantity is required
+            </small>
           )}
         </div>
 
-        <div className="form-group mb-3">
-          <label htmlFor="purchaseDate" className="form-label">
+        <div className="review-item-form-group">
+          <label htmlFor="purchaseDate" className="review-item-form-label">
             Purchase Date
           </label>
           <input
             type="date"
             id="purchaseDate"
             name="purchaseDate"
-            className="form-control"
+            className="review-item-form-control"
             value={formData.purchaseDate}
             onChange={handleChange}
           />
         </div>
 
-        <div className="form-group mb-3">
-          <label htmlFor="expiryDate" className="form-label">
+        <div className="review-item-form-group">
+          <label htmlFor="expiryDate" className="review-item-form-label">
             Expiry Date
             <Tooltip title="Predicted based on item's predicted shelf life. Always refer to the item's Best By Date">
               <InfoIcon
@@ -249,13 +220,11 @@ const ReviewItemModal = () => {
             type="date"
             id="expiryDate"
             name="expiryDate"
-            className="form-control"
+            className="review-item-form-control"
             value={formData.expiryDate}
             onChange={handleChange}
           />
         </div>
-        
-        {renderFooter()}
       </form>
     </Modal>
   );
