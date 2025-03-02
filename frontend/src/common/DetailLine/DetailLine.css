@@ -6,11 +6,28 @@
     width: 100%;
 }
 
+.detail-line .title-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.detail-line .chevron-icon {
+    margin-right: 4px;
+    font-size: 20px;
+    color: #555;
+    transition: transform 0.3s ease;
+}
+
+.detail-line .chevron-icon.rotated {
+    transform: rotate(-90deg);
+}
+
 .detail-line span {
     font-weight: bold;
     text-transform: uppercase;
     white-space: nowrap;
-    margin-right: 8px;
 }
 
 .detail-line .line {
