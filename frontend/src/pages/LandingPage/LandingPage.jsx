@@ -126,12 +126,12 @@ const LandingPage = () => {
             {
               text: "Scan Item",
               onClick: () => handleOpenModal("scanItemModal"),
-              variant: "contained",
+              variant: "accent",
             },
             {
               text: "Manual Add",
               onClick: () => handleOpenModal("manualItemModal"),
-              variant: "contained",
+              variant: "accent",
             },
           ]}
         />

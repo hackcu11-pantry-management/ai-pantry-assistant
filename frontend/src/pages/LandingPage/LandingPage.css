@@ -2,28 +2,30 @@
 
 .page-container {
     padding: 20px;
+    background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary));
+    min-height: calc(100vh - 110px); /* Account for navbar and padding */
 }
 
 .loading-container {
     text-align: center;
     padding: 30px;
-    color: #666;
+    color: var(--text-secondary);
     font-style: italic;
 }
 
 .error-container {
     text-align: center;
     padding: 20px;
-    color: #e74c3c;
-    background-color: #fadbd8;
+    color: var(--error);
+    background: linear-gradient(to right, rgba(166, 75, 42, 0.1), rgba(166, 75, 42, 0.2));
     border-radius: 4px;
     margin: 10px 0;
 }
 
 .login-button {
     margin-top: 15px;
-    background-color: #3498db;
-    color: white;
+    background-color: var(--coffee-medium);
+    color: var(--text-light);
     border: none;
     padding: 8px 20px;
     border-radius: 4px;
@@ -33,14 +35,14 @@
 }
 
 .login-button:hover {
-    background-color: #2980b9;
+    background-color: var(--coffee-dark);
 }
 
 .empty-pantry {
     text-align: center;
     padding: 30px;
-    color: #7f8c8d;
-    background-color: #f8f9fa;
+    color: var(--text-secondary);
+    background: linear-gradient(to bottom, var(--bg-secondary), var(--coffee-cream));
     border-radius: 4px;
     margin: 10px 0;
 }

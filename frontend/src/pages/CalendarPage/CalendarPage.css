@@ -2,39 +2,43 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+    min-height: calc(100vh - 110px);
+    border-radius: 8px;
 }
 
 .calendar-container h1 {
-    color: #2c3e50;
+    color: var(--coffee-dark);
     margin-bottom: 10px;
     text-align: center;
 }
 
 .calendar-container p {
     text-align: center;
-    color: #7f8c8d;
+    color: var(--text-secondary);
     margin-bottom: 30px;
 }
 
 .calendar-wrapper {
-    background-color: #fff;
+    background: linear-gradient(to bottom, white, var(--bg-secondary));
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(36, 24, 17, 0.2);
     margin-bottom: 20px;
+    border-top: 3px solid var(--coffee-medium);
 }
 
 .loading, .error, .no-items {
     text-align: center;
     padding: 30px;
-    background-color: #f8f9fa;
+    background: linear-gradient(to bottom, var(--bg-secondary), var(--coffee-cream));
     border-radius: 8px;
     margin: 20px 0;
 }
 
 .error {
-    color: #dc3545;
-    background-color: #f8d7da;
+    color: var(--error);
+    background: linear-gradient(to right, rgba(166, 75, 42, 0.1), rgba(166, 75, 42, 0.2));
 }
 
 .calendar-event {
@@ -54,33 +58,175 @@
     justify-content: center;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    background: linear-gradient(to right, var(--bg-secondary), var(--coffee-cream));
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(36, 24, 17, 0.2);
+    border: 1px solid var(--coffee-medium);
 }
 
 .legend-item {
     display: flex;
     align-items: center;
     margin: 0 10px 10px;
+    color: var(--coffee-dark);
+    font-weight: 500;
 }
 
 .color-box {
-    width: 15px;
-    height: 15px;
-    margin-right: 5px;
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
     border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--coffee-dark);
 }
 
 .expired {
-    background-color: #dc3545;
+    background-color: var(--error);
 }
 
 .expiring-soon {
-    background-color: #fd7e14;
+    background-color: var(--accent-primary);
 }
 
 .expiring-week {
-    background-color: #ffc107;
+    background-color: var(--warning);
 }
 
 .not-expiring {
-    background-color: #28a745;
+    background-color: var(--success);
+}
+
+/* FullCalendar custom styling */
+.fc .fc-toolbar-title {
+    color: var(--coffee-dark);
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.fc .fc-button-primary {
+    background-color: var(--coffee-medium);
+    border-color: var(--coffee-dark);
+    color: var(--text-light);
+    font-weight: bold;
+}
+
+.fc .fc-button-primary:hover {
+    background-color: var(--coffee-dark);
+    border-color: var(--coffee-espresso);
+}
+
+.fc .fc-button-primary:disabled {
+    background-color: var(--coffee-light);
+    border-color: var(--coffee-light);
+    opacity: 0.7;
+}
+
+.fc .fc-button-active {
+    background-color: var(--coffee-dark) !important;
+    border-color: var(--coffee-dark) !important;
+    box-shadow: 0 0 5px rgba(200, 125, 85, 0.5) !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+    background-color: rgba(200, 125, 85, 0.2);
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-frame {
+    border: 2px solid var(--coffee-medium);
+    border-radius: 4px;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+    color: var(--text-light);
+    font-weight: bold;
+    background-color: var(--coffee-medium);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 5px;
+}
+
+.fc .fc-col-header-cell {
+    background-color: var(--coffee-medium);
+    color: var(--text-light);
+    font-weight: bold;
+    padding: 10px 0;
+}
+
+.fc .fc-col-header-cell-cushion {
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.fc .fc-daygrid-day-number {
+    color: var(--coffee-dark);
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+    border-color: var(--coffee-medium);
+    border-width: 1px;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+    border-color: var(--coffee-dark);
+    border-width: 2px;
+}
+
+.fc .fc-daygrid-day-frame {
+    background-color: transparent;
+    min-height: 100px;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-frame {
+    border: 2px solid var(--coffee-medium);
+    border-radius: 4px;
+}
+
+.fc-event {
+    background-color: var(--coffee-medium);
+    border: 2px solid var(--coffee-dark);
+    color: var(--text-light);
+    font-weight: bold;
+    opacity: 1;
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin-bottom: 2px;
+}
+
+.fc-event:hover {
+    transform: scale(1.02);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    background-color: var(--coffee-dark);
+}
+
+/* Custom event colors based on expiration status */
+.fc-event.expired {
+    background-color: var(--error);
+    border-color: #8B3A2A;
+}
+
+.fc-event.expiring-soon {
+    background-color: var(--accent-primary);
+    border-color: #A64B2A;
+}
+
+.fc-event.expiring-week {
+    background-color: var(--warning);
+    border-color: #B38B4D;
+}
+
+.fc-event.not-expiring {
+    background-color: var(--success);
+    border-color: #3A6247;
 }

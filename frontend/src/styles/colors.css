@@ -1,3 +1,53 @@
 /** @module colors.css */
 
+/* Coffee Brown Color Palette */
+:root {
+  /* Primary Colors */
+  --coffee-dark: #3A2618;      /* Dark rich coffee brown */
+  --coffee-medium: #6F4E37;    /* Medium coffee brown */
+  --coffee-light: #9B7653;     /* Light coffee brown */
+  --coffee-cream: #E6D2B5;     /* Cream/beige accent */
+  --coffee-espresso: #241811;  /* Very dark brown, almost black */
+  
+  /* Background Colors */
+  --bg-primary: #F8F4E9;       /* Light cream background */
+  --bg-secondary: #EFE6D5;     /* Slightly darker cream background */
+  
+  /* Text Colors */
+  --text-primary: #241811;     /* Dark brown text */
+  --text-secondary: #6F4E37;   /* Medium brown text */
+  --text-light: #F8F4E9;       /* Light text for dark backgrounds */
+  
+  /* Accent Colors */
+  --accent-primary: #C87D55;   /* Cinnamon/terracotta accent */
+  --accent-secondary: #A67B5B; /* Caramel accent */
+  
+  /* Status Colors */
+  --success: #4A7C59;          /* Green with brown undertone */
+  --warning: #D4AC6E;          /* Amber/honey */
+  --error: #A64B2A;            /* Reddish brown */
+  --info: #6A8CAF;             /* Muted blue */
+}
+
+/* Gradient Backgrounds */
+.gradient-primary {
+  background: linear-gradient(to right, var(--coffee-espresso), var(--coffee-dark), var(--coffee-medium));
+}
+
+.gradient-secondary {
+  background: linear-gradient(to right, var(--coffee-medium), var(--coffee-light), var(--coffee-cream));
+}
+
+.gradient-accent {
+  background: linear-gradient(to right, var(--coffee-dark), var(--accent-primary), var(--accent-secondary));
+}
+
+.gradient-warm {
+  background: linear-gradient(135deg, var(--coffee-medium), var(--accent-primary), var(--warning));
+}
+
+.gradient-cool {
+  background: linear-gradient(to bottom right, var(--coffee-dark), var(--coffee-medium), var(--info));
+}
+
 /* colors used in proj defined here */
