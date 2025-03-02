@@ -18,9 +18,9 @@ const ManualItemModal = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -45,9 +45,11 @@ const ManualItemModal = () => {
         },
       ]}
     >
-      <form className="product-form">        
+      <form className="product-form">
         <div className="form-group mb-3">
-          <label htmlFor="title" className="form-label">Name</label>
+          <label htmlFor="title" className="form-label">
+            Name
+          </label>
           <input
             type="text"
             id="title"
@@ -59,7 +61,9 @@ const ManualItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="amount" className="form-label">Amount</label>
+          <label htmlFor="amount" className="form-label">
+            Amount
+          </label>
           <div className="input-group">
             <input
               type="number"
@@ -87,7 +91,9 @@ const ManualItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="purchaseDate" className="form-label">Purchase Date</label>
+          <label htmlFor="purchaseDate" className="form-label">
+            Purchase Date
+          </label>
           <input
             type="date"
             id="purchaseDate"
@@ -99,7 +105,9 @@ const ManualItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="expiryDate" className="form-label">Expiry Date</label>
+          <label htmlFor="expiryDate" className="form-label">
+            Expiry Date
+          </label>
           <input
             type="date"
             id="expiryDate"

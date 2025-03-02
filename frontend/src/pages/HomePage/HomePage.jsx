@@ -8,8 +8,12 @@ const HomePage = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const pantryItems = useSelector((state) => state.productState.products);
-  const isAuthenticated = useSelector((state) => !!state.userState.loginResult?.token);
-  const username = useSelector((state) => state.userState.loginResult?.username || "User");
+  const isAuthenticated = useSelector(
+    (state) => !!state.userState.loginResult?.token,
+  );
+  const username = useSelector(
+    (state) => state.userState.loginResult?.username || "User",
+  );
 
   // For development: Add a message when accessing directly
   const [directAccess, setDirectAccess] = useState(false);
