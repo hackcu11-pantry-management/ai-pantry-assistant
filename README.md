@@ -1,4 +1,4 @@
-# AI Pantry Assistant
+# PantryPal
 
 ## Overview
 
