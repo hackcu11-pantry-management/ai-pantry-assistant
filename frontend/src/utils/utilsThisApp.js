@@ -97,8 +97,8 @@ export const basicAPI = (url, description, fetchOptions = {}) => {
   const thisUrl = useLocalApi ? url.replace("3000", "8443") : url;
 
   // Merge headers instead of overriding them
-  const headers = { ...fetchOptions.headers || {} };
-  
+  const headers = { ...(fetchOptions.headers || {}) };
+
   // Set Content-Type header if body is provided and not already set
   if (fetchOptions.body && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
@@ -107,26 +107,26 @@ export const basicAPI = (url, description, fetchOptions = {}) => {
   // Create a new fetchOptions object with the merged headers
   const updatedFetchOptions = {
     ...fetchOptions,
-    headers
+    headers,
   };
 
-  console.log('API Request:', {
+  console.log("API Request:", {
     url: thisUrl,
     method: updatedFetchOptions.method,
-    headers: updatedFetchOptions.headers
+    headers: updatedFetchOptions.headers,
   });
 
   return fetch(thisUrl, updatedFetchOptions)
     .then(
       (response) => {
-        console.log('API Response Status:', response.status);
+        console.log("API Response Status:", response.status);
         if (response.ok) {
           return response;
         }
         throw response;
       },
       (error) => {
-        console.error('API Request Error:', error);
+        console.error("API Request Error:", error);
         throw error;
       },
     )

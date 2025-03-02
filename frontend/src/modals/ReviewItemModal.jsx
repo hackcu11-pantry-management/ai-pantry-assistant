@@ -4,10 +4,13 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Modal } from "../common";
 import { toggleModal } from "../redux/actions/modalActions";
+import Tooltip from "@mui/material/Tooltip";
+import InfoIcon from "@mui/icons-material/Info";
 
 const ReviewItemModal = () => {
   const dispatch = useDispatch();
-  const selectedItem = useSelector((state) => state.productState?.selected) ?? {};
+  const selectedItem =
+    useSelector((state) => state.productState?.selected) ?? {};
 
   const [formData, setFormData] = useState({
     title: selectedItem.title || "",
@@ -29,9 +32,9 @@ const ReviewItemModal = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -66,9 +69,11 @@ const ReviewItemModal = () => {
             />
           </div>
         )}
-        
+
         <div className="form-group mb-3">
-          <label htmlFor="title" className="form-label">Name</label>
+          <label htmlFor="title" className="form-label">
+            Name
+          </label>
           <input
             type="text"
             id="title"
@@ -80,7 +85,9 @@ const ReviewItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="amount" className="form-label">Amount</label>
+          <label htmlFor="amount" className="form-label">
+            Amount
+          </label>
           <div className="input-group">
             <input
               type="number"
@@ -108,7 +115,9 @@ const ReviewItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="purchaseDate" className="form-label">Purchase Date</label>
+          <label htmlFor="purchaseDate" className="form-label">
+            Purchase Date
+          </label>
           <input
             type="date"
             id="purchaseDate"
@@ -120,7 +129,15 @@ const ReviewItemModal = () => {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="expiryDate" className="form-label">Expiry Date</label>
+          <label htmlFor="expiryDate" className="form-label">
+            Expiry Date
+            <Tooltip title="Predicted based on item's predicted shelf life. Always refer to the item's Best By Date">
+              <InfoIcon
+                fontSize="small"
+                style={{ cursor: "pointer", paddingTop: "7px" }}
+              />
+            </Tooltip>
+          </label>
           <input
             type="date"
             id="expiryDate"
