@@ -110,7 +110,7 @@ const DeleteConfirmationModal = () => {
       modal_id="deleteConfirmationModal"
       title="Delete Item"
       footerButtons={[]}
-      style={{ maxWidth: "400px" }}
+      style={{ maxWidth: "400px"}}
     >
       <div style={{ textAlign: "center", padding: "20px 0" }}>
         <p style={{ fontSize: "18px", marginBottom: "20px" }}>
