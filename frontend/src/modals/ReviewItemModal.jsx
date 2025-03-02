@@ -1,109 +1,136 @@
 /** @module ReviewItemModal.jsx */
 
-import React from "react";
-
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
 import { Modal } from "../common";
 import { toggleModal } from "../redux/actions/modalActions";
 
 const ReviewItemModal = () => {
   const dispatch = useDispatch();
+  const selectedItem = useSelector((state) => state.productState?.selected) ?? {};
 
-  const selectedItem =
-    useSelector((state) => state.productState?.selected) ?? {};
+  const [formData, setFormData] = useState({
+    title: selectedItem.title || "",
+    amount: selectedItem.size || "",
+    unit: selectedItem.unit || "units",
+    purchaseDate: selectedItem.purchaseDate || "",
+    expiryDate: selectedItem.expiryDate || "",
+  });
+
+  useEffect(() => {
+    setFormData({
+      title: selectedItem.title || "",
+      amount: selectedItem.size || "",
+      unit: selectedItem.unit || "units",
+      purchaseDate: selectedItem.purchaseDate || "",
+      expiryDate: selectedItem.expiryDate || "",
+    });
+  }, [selectedItem]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleClose = (modal_id) => {
     dispatch(toggleModal(modal_id));
   };
 
-  console.log(selectedItem);
   return (
     <Modal
       modal_id="reviewItemModal"
-      title="Review"
+      title="Add Item"
       footerButtons={[
         {
-          text: "Close",
-          variant: "contained",
+          text: "Cancel",
+          variant: "outlined",
           onClick: () => handleClose("reviewItemModal"),
+        },
+        {
+          text: "Save",
+          variant: "contained",
+          onClick: () => console.log("Submit functionality to be implemented"),
         },
       ]}
     >
-      {selectedItem && (
-        <div className="product-info">
-          <h3>Product Information:</h3>
-          <div className="product-details">
-            <p>
-              <strong>Name:</strong> {selectedItem.title}
-            </p>
-            <p>
-              <strong>Brand:</strong> {selectedItem.brand}
-            </p>
-            <p>
-              <strong>Category:</strong> {selectedItem.category}
-            </p>
-            {selectedItem.size && (
-              <p>
-                <strong>Size:</strong> {selectedItem.size}
-              </p>
-            )}
-            {selectedItem.weight && (
-              <p>
-                <strong>Weight:</strong> {selectedItem.weight}
-              </p>
-            )}
-            {selectedItem.color && (
-              <p>
-                <strong>Color:</strong> {selectedItem.color}
-              </p>
-            )}
-            {selectedItem.model && (
-              <p>
-                <strong>Model:</strong> {selectedItem.model}
-              </p>
-            )}
-            {selectedItem.dimension && (
-              <p>
-                <strong>Dimensions:</strong> {selectedItem.dimension}
-              </p>
-            )}
-            {(selectedItem.lowest_recorded_price > 0 ||
-              selectedItem.highest_recorded_price > 0) && (
-              <p>
-                <strong>Price Range:</strong> {selectedItem.currency || "$"}
-                {selectedItem.lowest_recorded_price} -{" "}
-                {selectedItem.highest_recorded_price}
-              </p>
-            )}
-            {selectedItem.offers && selectedItem.offers.length > 0 && (
-              <div>
-                <strong>Current Offers:</strong>
-                <ul className="mt-2">
-                  {selectedItem.offers.slice(0, 3).map((offer, index) => (
-                    <li key={index} className="text-sm mb-1">
-                      {offer.merchant}: ${offer.price}
-                      {offer.shipping && ` + ${offer.shipping} shipping`}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <p>
-              <strong>Description:</strong> {selectedItem.description}
-            </p>
+      <form className="product-form">
+        {selectedItem.images && selectedItem.images.length > 0 && (
+          <div className="product-image mb-4">
+            <img
+              src={selectedItem.images[0]}
+              alt={selectedItem.title}
+              style={{ maxWidth: "200px" }}
+            />
           </div>
-          {selectedItem.images && selectedItem.images.length > 0 && (
-            <div className="product-image">
-              <img
-                src={selectedItem.images[0]}
-                alt={selectedItem.title}
-                style={{ maxWidth: "200px", marginTop: "10px" }}
-              />
-            </div>
-          )}
+        )}
+        
+        <div className="form-group mb-3">
+          <label htmlFor="title" className="form-label">Name</label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            className="form-control"
+            value={formData.title}
+            onChange={handleChange}
+          />
         </div>
-      )}
+
+        <div className="form-group mb-3">
+          <label htmlFor="amount" className="form-label">Amount</label>
+          <div className="input-group">
+            <input
+              type="number"
+              id="amount"
+              name="amount"
+              className="form-control"
+              value={formData.amount}
+              onChange={handleChange}
+            />
+            <select
+              name="unit"
+              value={formData.unit}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="units">Units</option>
+              <option value="g">Grams</option>
+              <option value="kg">Kilograms</option>
+              <option value="ml">Milliliters</option>
+              <option value="l">Liters</option>
+              <option value="oz">Ounces</option>
+              <option value="lb">Pounds</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-group mb-3">
+          <label htmlFor="purchaseDate" className="form-label">Purchase Date</label>
+          <input
+            type="date"
+            id="purchaseDate"
+            name="purchaseDate"
+            className="form-control"
+            value={formData.purchaseDate}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="form-group mb-3">
+          <label htmlFor="expiryDate" className="form-label">Expiry Date</label>
+          <input
+            type="date"
+            id="expiryDate"
+            name="expiryDate"
+            className="form-control"
+            value={formData.expiryDate}
+            onChange={handleChange}
+          />
+        </div>
+      </form>
     </Modal>
   );
 };
