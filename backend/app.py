@@ -5,10 +5,36 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 from dotenv import load_dotenv
+import openai
 
 load_dotenv()
 
 app = Flask(__name__)
+
+# Configure OpenAI
+openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Predefined food categories
+FOOD_CATEGORIES = [
+    "Fruits & Vegetables",
+    "Meat & Seafood",
+    "Dairy & Eggs",
+    "Bread & Bakery",
+    "Pantry Staples",
+    "Snacks",
+    "Beverages",
+    "Frozen Foods",
+    "Canned Goods",
+    "Condiments & Sauces",
+    "Baking Supplies",
+    "Breakfast Foods",
+    "Pasta & Rice",
+    "Herbs & Spices",
+    "Ready-to-Eat Meals",
+    "Baby Food & Formula",
+    "Pet Food",
+    "Other"
+]
 
 # Enable CORS for all routes with specific configuration
 CORS(app, 
@@ -20,6 +46,45 @@ CORS(app,
              "max_age": 3600
          }
      })
+
+
+def get_days_to_expire(product_data):
+    """Get the days to expire for a product
+    call openai to get the days to expire for a product"""
+    try:
+        prompt = f"""You are a food expiration expert. Your task is to analyze product information and output ONLY a number representing days until expiry, or "n/a" for non-perishable items.
+        Rules:
+        1. Output ONLY a number (no text, units, or explanation) representing days until expiry
+        2. Output ONLY "n/a" for non-perishable items or items with 2+ year shelf life
+        3. If uncertain, use conservative estimates based on product category
+        4. Consider these general guidelines:
+        - Fresh produce: 3-14 days
+        - Dairy: 7-21 days
+        - Fresh meat: 3-7 days
+        - Bread: 5-7 days
+        - Ready meals: 3-5 days
+        - Frozen foods: 180 days
+
+        Product to analyze:
+        {product_data}
+
+        Remember: Output ONLY a number or "n/a". No other text."""
+
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a precise food expiration expert, creating data for analysis. You only respond with numbers or 'n/a'."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0,
+            max_tokens=10
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error getting days to expire: {e}")
+        return "n/a"  # Fail safe default
+
+
 
 def get_db_connection():
     try:
@@ -51,6 +116,53 @@ def find_product_in_db(upc):
     except Exception as e:
         return None, str(e)
 
+def get_gpt_category(product_data):
+    """Use GPT to categorize a food product based on available information"""
+    try:
+        # Construct a detailed prompt with product information
+        product_info = f"""
+Product Name: {product_data.get('title', '')}
+Brand: {product_data.get('brand', '')}
+Description: {product_data.get('description', '')}
+"""
+        
+        prompt = f"""Based on the following product information, categorize this food item into EXACTLY ONE of these categories: {', '.join(FOOD_CATEGORIES)}. 
+Respond with ONLY the category name, nothing else.
+
+Product Information:
+{product_info}
+
+Remember:
+1. Respond with EXACTLY ONE category from the list
+2. Do not add any explanation or additional text
+3. If unsure, use the most specific category that fits, or 'Other' as last resort"""
+
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a precise food categorization assistant. You only respond with exact category names from the provided list."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0,
+            max_tokens=20
+        )
+        
+        category = response.choices[0].message.content.strip()
+        
+        # Validate the response is in our category list
+        if category not in FOOD_CATEGORIES:
+            return "Other"
+            
+        return category
+    except Exception as e:
+        print(f"GPT categorization error: {e}")
+        return "Other"
+
+def map_category(category, product_data):
+    """Map API category to our enum values with GPT enhancement for food items"""
+    category = category.lower()
+    return get_gpt_category(product_data)
+
 def save_product_to_db(product_data):
     """Save product to database"""
     try:
@@ -58,13 +170,18 @@ def save_product_to_db(product_data):
         if not conn:
             return False, "Database connection failed"
         
+        # Map the category with enhanced food categorization
+        raw_category = product_data.get('category', '')
+        mapped_category = map_category(raw_category, product_data)
+        
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO products (
                 productUPC, productName, productDescription, productBrand,
                 productCategory, productLowestPrice, productHighestPrice,
-                productCurrency, productImages
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                productCurrency, productImages, productModel, productColor,
+                productSize, productDimension, productWeight
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (productUPC) DO UPDATE SET
                 productName = EXCLUDED.productName,
                 productDescription = EXCLUDED.productDescription,
@@ -73,23 +190,34 @@ def save_product_to_db(product_data):
                 productLowestPrice = EXCLUDED.productLowestPrice,
                 productHighestPrice = EXCLUDED.productHighestPrice,
                 productCurrency = EXCLUDED.productCurrency,
-                productImages = EXCLUDED.productImages
+                productImages = EXCLUDED.productImages,
+                productModel = EXCLUDED.productModel,
+                productColor = EXCLUDED.productColor,
+                productSize = EXCLUDED.productSize,
+                productDimension = EXCLUDED.productDimension,
+                productWeight = EXCLUDED.productWeight
         """, (
             product_data['upc'],
             product_data.get('title', ''),
             product_data.get('description', '')[:515],
             product_data.get('brand', ''),
-            product_data.get('category', ''),
-            product_data.get('lowest_price', 0.0),
-            product_data.get('highest_price', 0.0),
+            mapped_category,
+            product_data.get('lowest_recorded_price', 0.0),
+            product_data.get('highest_recorded_price', 0.0),
             product_data.get('currency', 'USD'),
-            product_data.get('images', [])
+            product_data.get('images', []),
+            product_data.get('model', ''),
+            product_data.get('color', ''),
+            product_data.get('size', ''),
+            product_data.get('dimension', ''),
+            product_data.get('weight', '')
         ))
         conn.commit()
         cur.close()
         conn.close()
         return True, None
     except Exception as e:
+        print(f"Failed to cache product: {str(e)}")
         return False, str(e)
 
 @app.route('/api/lookup-upc', methods=['GET'])

@@ -12,6 +12,8 @@ import { Navbar } from "./common";
 import LandingPage from "./pages/LandingPage/LandingPage";
 import ExamplePage from "./pages/ExamplePage";
 import HomePage from "./pages/HomePage/HomePage";
+import { SignIn, SignUp } from "./pages/Auth";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
 
 import ModalProvider from "./ModalProvider";
 
@@ -36,12 +38,96 @@ function BarcodeScanner() {
   const [scanning, setScanning] = useState(false);
   const [barcode, setBarcode] = useState("");
   const [error, setError] = useState(null);
+  const [productData, setProductData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const scannerRef = useRef(null);
   const quaggaInitialized = useRef(false);
 
+  const lookupUPC = async (upc) => {
+    setIsLoading(true);
+    setError(null);
+
+    const maxRetries = 3;
+    let retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      try {
+        const response = await fetch(
+          `http://localhost:5001/api/lookup-upc?upc=${upc}`,
+        );
+        const data = await response.json();
+
+        console.log("Full API Response:", data);
+
+        if (response.status === 429) {
+          // Rate limited - wait and retry
+          retryCount++;
+          if (retryCount < maxRetries) {
+            setError(
+              `Rate limited, retrying in ${retryCount * 2} seconds... (Attempt ${retryCount}/${maxRetries})`,
+            );
+            await new Promise((resolve) =>
+              setTimeout(resolve, retryCount * 2000),
+            );
+            continue;
+          }
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || "Failed to lookup product");
+        }
+
+        if (data.items && data.items[0]) {
+          // Map the API response fields directly
+          const item = data.items[0];
+          console.log("Item from API:", item);
+          console.log("Raw productname:", item.productname);
+          console.log("Raw productbrand:", item.productbrand);
+          console.log("Object keys:", Object.keys(item));
+
+          // Ensure we're accessing the properties correctly
+          const mappedData = {
+            title: item["productname"],
+            brand: item["productbrand"],
+            category: item["productcategory"],
+            size: item["productsize"],
+            weight: item["productweight"],
+            color: item["productcolor"],
+            model: item["productmodel"],
+            dimension: item["productdimension"],
+            description: item["productdescription"],
+            lowest_recorded_price: item["productlowestprice"],
+            highest_recorded_price: item["producthighestprice"],
+            currency: item["productcurrency"],
+            images: item["productimages"] || [],
+            upc: item["productupc"],
+          };
+
+          console.log("Mapped Product Data:", mappedData);
+          setProductData(mappedData);
+          break; // Success - exit the retry loop
+        } else {
+          throw new Error("No product data found");
+        }
+      } catch (err) {
+        retryCount++;
+        if (retryCount === maxRetries) {
+          setError(`Error looking up product: ${err.message}`);
+          setProductData(null);
+        } else {
+          console.log(`Attempt ${retryCount} failed, retrying...`);
+        }
+      }
+    }
+
+    setIsLoading(false);
+  };
+
   const onDetected = (result) => {
-    setBarcode(result.codeResult.code);
+    const scannedCode = result.codeResult.code;
+    setBarcode(scannedCode);
     stopScanner();
+    lookupUPC(scannedCode);
   };
 
   const startScanner = () => {
@@ -70,12 +156,7 @@ function BarcodeScanner() {
             target: scannerRef.current,
           },
           decoder: {
-            readers: [
-              "upc_reader",
-              "upc_e_reader",
-              "ean_reader",
-              "ean_8_reader",
-            ],
+            readers: ["upc_reader", "upc_e_reader"],
           },
         },
         (err) => {
@@ -123,6 +204,7 @@ function BarcodeScanner() {
       <button
         onClick={scanning ? stopScanner : startScanner}
         className="scan-button"
+        disabled={isLoading}
       >
         {scanning ? "Stop Scanning" : "Start Scanning"}
       </button>
@@ -151,10 +233,87 @@ function BarcodeScanner() {
         }}
       />
 
-      {barcode && (
+      {isLoading && <div className="loading">Looking up product...</div>}
+
+      {barcode && !isLoading && (
         <div className="result">
           <h3>Scanned Code:</h3>
           <p>{barcode}</p>
+        </div>
+      )}
+
+      {productData && !isLoading && (
+        <div className="product-info">
+          <h3>Product Information:</h3>
+          <div className="product-details">
+            <p>
+              <strong>Name:</strong> {productData.title}
+            </p>
+            <p>
+              <strong>Brand:</strong> {productData.brand}
+            </p>
+            <p>
+              <strong>Category:</strong> {productData.category}
+            </p>
+            {productData.size && (
+              <p>
+                <strong>Size:</strong> {productData.size}
+              </p>
+            )}
+            {productData.weight && (
+              <p>
+                <strong>Weight:</strong> {productData.weight}
+              </p>
+            )}
+            {productData.color && (
+              <p>
+                <strong>Color:</strong> {productData.color}
+              </p>
+            )}
+            {productData.model && (
+              <p>
+                <strong>Model:</strong> {productData.model}
+              </p>
+            )}
+            {productData.dimension && (
+              <p>
+                <strong>Dimensions:</strong> {productData.dimension}
+              </p>
+            )}
+            {(productData.lowest_recorded_price > 0 ||
+              productData.highest_recorded_price > 0) && (
+              <p>
+                <strong>Price Range:</strong> {productData.currency || "$"}
+                {productData.lowest_recorded_price} -{" "}
+                {productData.highest_recorded_price}
+              </p>
+            )}
+            {productData.offers && productData.offers.length > 0 && (
+              <div>
+                <strong>Current Offers:</strong>
+                <ul className="mt-2">
+                  {productData.offers.slice(0, 3).map((offer, index) => (
+                    <li key={index} className="text-sm mb-1">
+                      {offer.merchant}: ${offer.price}
+                      {offer.shipping && ` + ${offer.shipping} shipping`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p>
+              <strong>Description:</strong> {productData.description}
+            </p>
+          </div>
+          {productData.images && productData.images.length > 0 && (
+            <div className="product-image">
+              <img
+                src={productData.images[0]}
+                alt={productData.title}
+                style={{ maxWidth: "200px", marginTop: "10px" }}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -162,23 +321,50 @@ function BarcodeScanner() {
 }
 
 function App() {
-  // Mock authentication state - this would be handled by a proper auth system later
+  // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check for existing user session on app load
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+  };
 
   return (
     <Router>
-      <Navbar isLoggedIn={isLoggedIn} />
       <ModalProvider />
+      <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
       <div className="app-container">
         <Routes>
+          {/* Public routes */}
           <Route
             path="/"
             element={<LandingPage setIsLoggedIn={setIsLoggedIn} />}
           />
-          <Route path="/ex" element={<ExamplePage />} />
+          <Route
+            path="/signin"
+            element={<SignIn setIsLoggedIn={setIsLoggedIn} />}
+          />
+          <Route
+            path="/signup"
+            element={<SignUp setIsLoggedIn={setIsLoggedIn} />}
+          />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          {/* Protected routes */}
           <Route path="/home" element={<HomePage />} />
           <Route path="/scan" element={<BarcodeScanner />} />
-          {/* Development route - remove before production */}
+
+          {/* Development routes */}
+          <Route path="/ex" element={<ExamplePage />} />
           <Route
             path="/dev-login"
             element={<DevAutoLogin setIsLoggedIn={setIsLoggedIn} />}
