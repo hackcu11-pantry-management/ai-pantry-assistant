@@ -4,10 +4,11 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background-color: #addff8;
+  background-color: var(--bg-secondary);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(58, 38, 24, 0.1);
   margin: 2rem auto;
+  border-top: 3px solid var(--coffee-medium);
 }
 
 .pizza-container {
@@ -20,7 +21,7 @@
 .pizza-base {
   position: absolute;
   inset: 0;
-  background-color: #fef1c7;
+  background-color: var(--coffee-cream);
   border-radius: 50%;
   overflow: hidden;
   display: flex;
@@ -51,7 +52,7 @@
 .loading-text {
   font-size: 1.125rem;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--coffee-dark);
   margin-bottom: 1rem;
   text-align: center;
 }
@@ -59,14 +60,14 @@
 .progress-bar-container {
   width: 16rem;
   height: 0.5rem;
-  background-color: #e5e7eb;
+  background-color: rgba(230, 210, 181, 0.3);
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .progress-bar {
   height: 100%;
-  background-color: #ef4444;
+  background-color: var(--coffee-medium);
   border-radius: 9999px;
   transition: width 500ms ease-out;
 } 

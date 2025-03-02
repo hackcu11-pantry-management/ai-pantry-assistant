@@ -16,7 +16,7 @@
 .detail-line .chevron-icon {
     margin-right: 4px;
     font-size: 20px;
-    color: #555;
+    color: var(--coffee-medium);
     transition: transform 0.3s ease;
 }
 
@@ -28,9 +28,10 @@
     font-weight: bold;
     text-transform: uppercase;
     white-space: nowrap;
+    color: var(--coffee-dark);
 }
 
 .detail-line .line {
     flex-grow: 1;
-    border-bottom: 1px solid gray;
+    border-bottom: 1px solid var(--coffee-light);
 }
