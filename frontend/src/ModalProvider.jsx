@@ -10,6 +10,7 @@ import ScanItemModal from "./modals/ScanItemModal/ScanItemModal";
 import ReviewItemModal from "./modals/ReviewItemModal";
 import ManualItemModal from "./modals/ManualItemModal";
 import EditItemModal from "./modals/EditItemModal";
+import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
 
 const ModalProvider = () => {
   const dispatch = useDispatch();
@@ -37,6 +38,7 @@ const ModalProvider = () => {
       <ReviewItemModal />
       <ManualItemModal />
       <EditItemModal />
+      <DeleteConfirmationModal />
     </>
   );
 };
