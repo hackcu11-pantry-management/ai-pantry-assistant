@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { Card, CardHeader, DetailLine, ProductGrid } from "../../common";
 import { toggleModal } from "../../redux/actions/modalActions";
-import { getUserPantry } from "../../redux/actions/productActions";
+import { getUserPantry, selectProduct } from "../../redux/actions/productActions";
 
 import "./LandingPage.css";
 
@@ -51,6 +51,15 @@ const LandingPage = () => {
     dispatch(toggleModal(modal_id));
   };
 
+  // Handle item click to open edit modal
+  const handleItemClick = (item) => {
+    console.log("Item clicked:", item);
+    // Select the item in the store
+    dispatch(selectProduct(item));
+    // Open the edit modal
+    handleOpenModal("editItemModal");
+  };
+
   // Group pantry items by category
   const groupedPantryItems = pantryItems.reduce((acc, item) => {
     const category = item.productcategory || "Other";
@@ -84,6 +93,9 @@ const LandingPage = () => {
           ? item.productimages[0]
           : "https://via.placeholder.com/150?text=No+Image",
       quantity: `${item.quantity} ${item.quantitytype || "items"}`,
+      // Store original dates for editing
+      purchaseDate: item.date_purchased,
+      category: item.productcategory,
     });
     return acc;
   }, {});
@@ -125,7 +137,7 @@ const LandingPage = () => {
           Object.entries(groupedPantryItems).map(([category, items]) => (
             <div key={category}>
               <DetailLine title={category} />
-              <ProductGrid data={items} />
+              <ProductGrid data={items} onItemClick={handleItemClick} />
             </div>
           ))
         ) : (

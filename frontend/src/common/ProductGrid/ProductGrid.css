@@ -16,6 +16,13 @@
     text-align: center;
     background-color: #fff;
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 2px 5px 15px rgba(0, 0, 0, 0.15);
 }
 
 .product-image {
