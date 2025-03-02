@@ -3,6 +3,7 @@
   "build": {
     "builder": "NIXPACKS",
     "buildCommand": "CI=false npm install && CI=false npm run build"
+
   },
   "deploy": {
     "startCommand": "npx serve -s build",
