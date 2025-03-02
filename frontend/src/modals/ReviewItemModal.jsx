@@ -6,6 +6,9 @@ import { Modal } from "../common";
 import { toggleModal } from "../redux/actions/modalActions";
 import { addToPantry } from "../redux/actions/productActions";
 
+import Tooltip from "@mui/material/Tooltip";
+import InfoIcon from "@mui/icons-material/Info";
+
 const ReviewItemModal = () => {
   const dispatch = useDispatch();
   const selectedItem =
@@ -158,6 +161,12 @@ const ReviewItemModal = () => {
         <div className="form-group mb-3">
           <label htmlFor="expiryDate" className="form-label">
             Expiry Date
+            <Tooltip title="Predicted based on item's predicted shelf life. Always refer to the item's Best By Date">
+              <InfoIcon
+                fontSize="small"
+                style={{ cursor: "pointer", paddingTop: "7px" }}
+              />
+            </Tooltip>
           </label>
           <input
             type="date"
