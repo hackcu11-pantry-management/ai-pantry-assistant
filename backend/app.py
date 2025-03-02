@@ -10,13 +10,21 @@ import bcrypt
 import jwt as pyjwt
 from datetime import datetime, timedelta
 from functools import wraps
+import time
 
 load_dotenv()
 
 app = Flask(__name__)
 
-# Configure OpenAI
+# Configure OpenAI and Go-UPC API keys
 openai.api_key = os.getenv('OPENAI_API_KEY')
+GOUPC_API_KEY = os.getenv('GOUPC_API_KEY')
+
+# Rate limiting configuration for Go-UPC API (2 requests per second)
+RATE_LIMIT_REQUESTS = 2  # requests per second
+RATE_LIMIT_WINDOW = 1  # second
+last_request_time = None
+request_count = 0
 
 # JWT Secret Key
 JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key')
@@ -231,6 +239,7 @@ def map_category(category, product_data):
 def save_product_to_db(product_data):
     """Save product to database"""
     try:
+        print(f"Attempting to save product data: {product_data}")  # Debug log
         conn = get_db_connection()
         if not conn:
             return False, "Database connection failed"
@@ -238,6 +247,27 @@ def save_product_to_db(product_data):
         # Map the category with enhanced food categorization
         raw_category = product_data.get('category', '')
         mapped_category = map_category(raw_category, product_data)
+        
+        # Extract values with detailed logging
+        upc = product_data.get('upc', '')
+        title = product_data.get('title', '')
+        description = product_data.get('description', '')[:515] if product_data.get('description') else ''
+        brand = product_data.get('brand', '')
+        lowest_price = float(product_data.get('lowest_recorded_price', 0.0))
+        highest_price = float(product_data.get('highest_recorded_price', 0.0))
+        currency = product_data.get('currency', 'USD')
+        images = product_data.get('images', [])
+        model = product_data.get('model', '')
+        color = product_data.get('color', '')
+        size = product_data.get('size', '')
+        dimension = product_data.get('dimension', '')
+        weight = product_data.get('weight', '')
+
+        print(f"Processed values for DB insert:")  # Debug log
+        print(f"UPC: {upc}")
+        print(f"Title: {title}")
+        print(f"Brand: {brand}")
+        print(f"Category: {mapped_category}")
         
         cur = conn.cursor()
         cur.execute("""
@@ -262,20 +292,20 @@ def save_product_to_db(product_data):
                 productDimension = EXCLUDED.productDimension,
                 productWeight = EXCLUDED.productWeight
         """, (
-            product_data['upc'],
-            product_data.get('title', ''),
-            product_data.get('description', '')[:515],
-            product_data.get('brand', ''),
+            upc,
+            title,
+            description,
+            brand,
             mapped_category,
-            product_data.get('lowest_recorded_price', 0.0),
-            product_data.get('highest_recorded_price', 0.0),
-            product_data.get('currency', 'USD'),
-            product_data.get('images', []),
-            product_data.get('model', ''),
-            product_data.get('color', ''),
-            product_data.get('size', ''),
-            product_data.get('dimension', ''),
-            product_data.get('weight', '')
+            lowest_price,
+            highest_price,
+            currency,
+            images,
+            model,
+            color,
+            size,
+            dimension,
+            weight
         ))
         conn.commit()
         cur.close()
@@ -283,27 +313,81 @@ def save_product_to_db(product_data):
         return True, None
     except Exception as e:
         print(f"Failed to cache product: {str(e)}")
+        print(f"Full product data that caused error: {product_data}")  # Debug log
         return False, str(e)
+
+def call_upc_api(upc):
+    """Call the Go-UPC API with rate limiting"""
+    global last_request_time, request_count
+    
+    current_time = time.time()
+    
+    # Reset counter if window has passed
+    if last_request_time and current_time - last_request_time > RATE_LIMIT_WINDOW:
+        request_count = 0
+    
+    # Check if we're at the rate limit
+    if request_count >= RATE_LIMIT_REQUESTS:
+        wait_time = RATE_LIMIT_WINDOW - (current_time - last_request_time)
+        if wait_time > 0:
+            time.sleep(wait_time)
+            request_count = 0
+    
+    # Make the API call
+    url = f'https://go-upc.com/api/v1/code/{upc}'
+    try:
+        response = requests.get(
+            url,
+            headers={
+                'Authorization': f'Bearer {GOUPC_API_KEY}',
+                'Accept': 'application/json'
+            },
+            timeout=10
+        )
+        
+        # Update rate limit tracking
+        last_request_time = time.time()
+        request_count += 1
+        
+        if response.status_code == 429:
+            # If rate limited, wait and retry once
+            time.sleep(RATE_LIMIT_WINDOW)
+            
+            # Retry the request
+            response = requests.get(
+                url,
+                headers={
+                    'Authorization': f'Bearer {GOUPC_API_KEY}',
+                    'Accept': 'application/json'
+                },
+                timeout=10
+            )
+        
+        return response
+        
+    except requests.exceptions.RequestException as e:
+        print(f"API request error: {e}")
+        return None
+
+def validate_upc(upc):
+    """Validate UPC format"""
+    try:
+        # Remove any non-digit characters
+        clean_upc = ''.join(filter(str.isdigit, upc))
+        # Convert to integer to ensure it's a valid number
+        int(clean_upc)
+        # Check length (UPC-A is 12 digits, UPC-E is 8 digits)
+        if len(clean_upc) not in [8, 12]:
+            return False, "Invalid UPC length. Must be 8 or 12 digits."
+        return True, clean_upc
+    except (ValueError, TypeError):
+        return False, "Invalid UPC format. Must contain only digits."
 
 @app.route('/api/lookup-upc', methods=['GET'])
 def lookup_upc():
-    """
-    Master route to handle backend of product search.
-    First checks local database, then falls back to API if needed.
-    
-    Standard Response Format:
-    {
-        "success": boolean,
-        "source": "database" | "api" | null,
-        "cached": boolean,
-        "items": array | null,
-        "error": string | null,
-        "status": string | null,
-        "details": string | null
-    }
-    """
     try:
         upc = request.args.get('upc')
+        print(f"\nProcessing UPC lookup request for: {upc}")  # Debug log
         
         if not upc:
             return jsonify({
@@ -316,8 +400,27 @@ def lookup_upc():
                 "details": None
             }), 400
 
+        # Validate UPC format
+        is_valid, result = validate_upc(upc)
+        print(f"UPC validation result: valid={is_valid}, result={result}")  # Debug log
+        
+        if not is_valid:
+            return jsonify({
+                "success": False,
+                "source": None,
+                "cached": False,
+                "items": None,
+                "error": "Invalid UPC format",
+                "status": "VALIDATION_ERROR",
+                "details": result
+            }), 400
+
+        # Use the cleaned UPC for all operations
+        upc = result
+
         # First, check our database
         product, db_error = find_product_in_db(upc)
+        print(f"Database lookup result: found={bool(product)}, error={db_error}")  # Debug log
         
         if db_error:
             return jsonify({
@@ -331,28 +434,49 @@ def lookup_upc():
             }), 503
 
         if product:
+            # Normalize the data structure
+            normalized_product = {
+                "title": product["productname"],
+                "brand": product["productbrand"],
+                "category": product["productcategory"],
+                "description": product["productdescription"],
+                "lowest_recorded_price": product["productlowestprice"],
+                "highest_recorded_price": product["producthighestprice"],
+                "currency": product["productcurrency"],
+                "images": product["productimages"],
+                "model": product["productmodel"],
+                "color": product["productcolor"],
+                "size": product["productsize"],
+                "dimension": product["productdimension"],
+                "weight": product["productweight"],
+                "upc": product["productupc"]
+            }
+            
             return jsonify({
                 "success": True,
                 "source": "database",
                 "cached": True,
-                "items": [product],
+                "items": [normalized_product],
                 "error": None,
                 "status": None,
                 "details": None
             })
 
         # If not in database, try the API
-        url = 'https://api.upcitemdb.com/prod/trial/lookup'
         print(f"Hitting API for UPC: {upc}")
-        response = requests.get(
-            url,
-            params={'upc': upc},
-            headers={
-                'User-Agent': 'Mozilla/5.0',
-                'Accept': 'application/json'
-            }
-        )
+        response = call_upc_api(upc)
         
+        if not response:
+            return jsonify({
+                "success": False,
+                "source": "api",
+                "cached": False,
+                "items": None,
+                "error": "API request failed",
+                "status": "API_ERROR",
+                "details": "Failed to connect to UPC API"
+            }), 503
+            
         if response.status_code != 200:
             return jsonify({
                 "success": False,
@@ -365,10 +489,29 @@ def lookup_upc():
             }), response.status_code
 
         api_data = response.json()
+        print(f"API Response data: {api_data}")  # Debug log
         
         # If API found the product, save it to our database
-        if api_data.get('items'):
-            product_data = api_data['items'][0]
+        if api_data.get('product'):
+            # Transform Go-UPC response format to our format
+            product_data = {
+                'upc': api_data.get('code'),
+                'title': api_data['product'].get('name'),
+                'brand': api_data['product'].get('brand'),
+                'category': api_data['product'].get('category'),
+                'description': api_data['product'].get('description'),
+                'images': [api_data['product'].get('imageUrl')] if api_data['product'].get('imageUrl') else [],
+                'model': '',  # Not provided by Go-UPC
+                'color': next((spec[1] for spec in api_data['product'].get('specs', []) if spec[0] == 'Color'), ''),
+                'size': next((spec[1] for spec in api_data['product'].get('specs', []) if spec[0] == 'Size'), ''),
+                'dimension': next((f"{spec[1]}" for spec in api_data['product'].get('specs', []) if any(dim in spec[0].lower() for dim in ['height', 'width', 'length'])), ''),
+                'weight': next((spec[1] for spec in api_data['product'].get('specs', []) if 'weight' in spec[0].lower()), ''),
+                'lowest_recorded_price': 0.0,  # Not provided by Go-UPC
+                'highest_recorded_price': 0.0,  # Not provided by Go-UPC
+                'currency': 'USD'  # Default currency
+            }
+            
+            print(f"Transformed product data: {product_data}")  # Debug log
             success, save_error = save_product_to_db(product_data)
             
             if not success:
@@ -377,7 +520,7 @@ def lookup_upc():
                     "success": True,
                     "source": "api",
                     "cached": False,
-                    "items": api_data['items'],
+                    "items": [product_data],
                     "error": None,
                     "status": None,
                     "details": f"Failed to cache: {save_error}"
@@ -387,13 +530,14 @@ def lookup_upc():
                 "success": True,
                 "source": "api",
                 "cached": True,
-                "items": api_data['items'],
+                "items": [product_data],
                 "error": None,
                 "status": None,
                 "details": None
             })
         
         # If API didn't find the product
+        print("API found no items for this UPC")  # Debug log
         return jsonify({
             "success": False,
             "source": "api",
@@ -405,11 +549,139 @@ def lookup_upc():
         }), 404
     
     except Exception as e:
+        print(f"Server error in lookup_upc: {str(e)}")  # Add logging
+        print(f"Full error details: ", e.__dict__)  # More detailed error info
         return jsonify({
             "success": False,
             "source": None,
             "cached": False,
             "items": None,
+            "error": "Server error",
+            "status": "SERVER_ERROR",
+            "details": str(e)
+        }), 500
+    
+from datetime import datetime
+
+@app.route('/api/get-recipes', methods=['POST'])
+def get_recipes():
+    """
+    Gets recipe recommendations based on user's pantry items.
+    Pantry items are provided in the request body.
+    """
+    try:
+        # Get user ID from request (optional, depending on your use case)
+        user_id = request.args.get('user_id')
+        
+        # Get pantry items from the request body
+        request_data = request.get_json()
+        if not request_data or 'pantryItems' not in request_data:
+            return jsonify({
+                "success": False,
+                "error": "Pantry items are required in the request body",
+                "status": "VALIDATION_ERROR",
+            }), 400
+
+        pantry_items = request_data['pantryItems']
+        
+        if not pantry_items:
+            return jsonify({
+                "success": False,
+                "error": "No pantry items provided",
+                "status": "NOT_FOUND",
+            }), 404
+            
+        # Sort pantry items by expiration date (earliest first)
+        pantry_items.sort(key=lambda x: datetime.strptime(x.get('expirationDate', '9999-12-31'), '%Y-%m-%d'))
+
+        # Format pantry items for the prompt
+        pantry_list = ""
+        for item in pantry_items:
+            quantity_str = f"{item.get('quantity', 'some')} {item.get('quantityType', '')}".strip()
+            expiration_date = item.get('expirationDate', 'unknown')
+            pantry_list += f"- {quantity_str} {item.get('productName', 'Unknown')} (Category: {item.get('productCategory', 'Unknown')}, Expires: {expiration_date})\n"
+            
+        # Generate recipes using GPT
+        prompt = f"""Based on these ingredients in my pantry, suggest 4 different recipes I could make. 
+The first two recipes should prioritize recipes that use ingredients with the earliest expiration dates, while maintaining recipe quality. The other two, dont need to prioritize expiration date.
+
+Here are my pantry items, sorted by expiration date (earliest first):
+{pantry_list}
+
+For each recipe, provide the following information in EXACTLY this format:
+
+1. Recipe name: [Name of the recipe]
+2. Brief description: [A short description of the recipe]
+3. Ingredients: [List of ingredients with amounts]
+4. Instructions: [Step-by-step instructions]
+5. Cooking time: [Approximate cooking time]
+6. Urgency: [Either "Urgent" or "Not Urgent"]
+
+Here is an example of the expected format:
+
+1. Recipe name: Cheese and Tomato Omelette
+2. Brief description: A quick and easy omelette using cheese and tomatoes.
+3. Ingredients: 
+   - 2 eggs
+   - 1/2 cup shredded cheese
+   - 1 tomato, diced
+4. Instructions:
+   - Beat the eggs in a bowl.
+   - Heat a non-stick pan over medium heat.
+   - Pour the eggs into the pan and cook until set.
+   - Add the cheese and tomatoes, then fold the omelette in half.
+5. Cooking time: 10 minutes
+6. Urgency: Urgent
+
+Now, suggest 4 recipes following the exact format above.
+
+Format each recipe as a distinct section, with the urgent recipes coming first. If you need common pantry staples not listed (salt, pepper, oil, etc.), you can assume I have those. This doesn't include items like sugar, flour 
+"""
+
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful cooking assistant that creates recipes based on available ingredients. Prioritize recipes that use ingredients with the earliest expiration dates. You must follow the exact format provided by the user."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=1500
+        )
+        
+        recipe_text = response.choices[0].message.content.strip()
+        
+        # Parse the recipe text into structured data using GPT
+        parser_prompt = f"""Parse the following recipe text into a structured JSON format with an array of recipe objects.
+Each recipe object should have fields for: name, description, ingredients (as an array), instructions (as an array of steps), cookingTime, and mealType.
+
+Recipe text:
+{recipe_text}
+
+Respond with ONLY valid JSON, no explanation or additional text.
+"""
+
+        parser_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a precise JSON parser that converts recipe text to structured data."},
+                {"role": "user", "content": parser_prompt}
+            ],
+            temperature=0,
+            response_format={"type": "json_object"},
+            max_tokens=1500
+        )
+        
+        parsed_recipes = parser_response.choices[0].message.content.strip()
+        
+        return jsonify({
+            "success": True,
+            "recipes": parsed_recipes,
+            "pantryItems": pantry_items
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
             "error": "Server error",
             "status": "SERVER_ERROR",
             "details": str(e)
