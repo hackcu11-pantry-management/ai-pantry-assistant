@@ -9,6 +9,7 @@ import {
   getUserPantry,
   selectProduct,
 } from "../../redux/actions/productActions";
+import { addSnackbar } from "../../redux/actions/snackbarActions";
 
 import "./LandingPage.css";
 
@@ -30,6 +31,20 @@ const LandingPage = () => {
   const [collapsedCategories, setCollapsedCategories] = useState({});
 
   useEffect(() => {
+    // Check for snackbar message in sessionStorage
+    const storedSnackbar = sessionStorage.getItem('pantrySnackbar');
+    if (storedSnackbar) {
+      const snackbarData = JSON.parse(storedSnackbar);
+      // Use the Redux snackbar action instead of local state
+      dispatch(addSnackbar({
+        message: snackbarData.message,
+        severity: snackbarData.severity,
+        open: true
+      }));
+      // Remove the message from sessionStorage to prevent showing it again on refresh
+      sessionStorage.removeItem('pantrySnackbar');
+    }
+
     // Debug authentication state
     console.log("Auth State:", authState);
     console.log("Is Authenticated:", isAuthenticated);
@@ -118,7 +133,7 @@ const LandingPage = () => {
   }, {});
 
   return (
-    <div className="page-container">
+    <div className="landing-page">
       <Card>
         <CardHeader
           text={pantryHeaderText}

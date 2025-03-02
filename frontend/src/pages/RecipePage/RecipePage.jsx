@@ -5,25 +5,31 @@ import { useDispatch, useSelector } from "react-redux";
 import "./RecipePage.css";
 import PizzaImageLoadingScreen from "../../PizzaLoader/PizzaImageLoadingScreen";
 import { setRecipes } from "../../redux/actions/recipeActions";
-import { Button } from "@mui/material";
+import { Button, CircularProgress, Snackbar, Alert } from "@mui/material";
+import { updatePantryItems } from "../../redux/actions/productActions";
 
 const RecipePage = () => {
   const dispatch = useDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [cookingRecipe, setCookingRecipe] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   const pantryItems =
     useSelector((state) => state.productState?.products) ?? [];
   const recipes = useSelector((state) => state.recipeState?.recipes) ?? [];
+  const user = useSelector((state) => state.userState?.loginResult);
 
   const structuredPantryItems = useMemo(() => {
     return pantryItems.map((item) => ({
+      pantryID: item?.pantryid,
       productName: item?.productname,
       productCategory: item?.productcategory,
       quantity: item?.quantity,
       quantityType: item?.quantitytype ?? "units",
       expirationDate: item?.expiration_date,
+      productUPC: item?.productupc
     }));
   }, [pantryItems]);
 
@@ -63,11 +69,88 @@ const RecipePage = () => {
     }
   }, [dispatch, structuredPantryItems]);
 
+  const handleCookRecipe = async (recipe) => {
+    if (!user || !user.token) {
+      setSnackbar({
+        open: true,
+        message: "You must be logged in to cook a recipe",
+        severity: "error"
+      });
+      return;
+    }
+
+    setCookingRecipe(recipe.name);
+    try {
+      const response = await fetch("http://localhost:5001/api/cook-recipe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          recipe: recipe,
+          pantryItems: structuredPantryItems
+        }),
+      });
+      console.log("Recipe:", JSON.stringify(recipe, null, 2));
+      console.log("PantryItems:", JSON.stringify(structuredPantryItems, null, 2));
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to cook recipe");
+      }
+
+      if (data.success) {
+        // Update the pantry items in Redux
+        // We need to refetch the pantry items to get the updated list
+        const pantryResponse = await fetch("http://localhost:5001/api/pantry", {
+          headers: {
+            "Authorization": `Bearer ${user.token}`
+          }
+        });
+        
+        const pantryData = await pantryResponse.json();
+        
+        if (pantryData.success) {
+          dispatch(updatePantryItems(pantryData.pantry_items || []));
+          
+          // Create success message
+          const successMessage = `Successfully cooked ${recipe.name}! Your pantry has been updated.`;
+          
+          // Store the snackbar message in sessionStorage to access it after redirect
+          sessionStorage.setItem('pantrySnackbar', JSON.stringify({
+            open: true,
+            message: successMessage,
+            severity: "success"
+          }));
+          
+          // Redirect to the landing page (pantry)
+          window.location.href = "/";
+        }
+      } else {
+        throw new Error(data.error || "Failed to cook recipe");
+      }
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: err.message,
+        severity: "error"
+      });
+    } finally {
+      setCookingRecipe(null);
+    }
+  };
+
   useEffect(() => {
     if (recipes.length === 0) {
       fetchRecipes();
     }
   }, [fetchRecipes, recipes.length]);
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   return (
     <div className="container recipe-page">
@@ -84,9 +167,10 @@ const RecipePage = () => {
               onClick={fetchRecipes}
               variant="text"
               sx={{
-                color: "#3498db",
+                color: "var(--coffee-medium)", 
                 cursor: "pointer",
                 fontSize: "16px",
+                fontWeight: 800,
                 "&:hover": {
                   color: "#fff",
                 },
@@ -131,6 +215,32 @@ const RecipePage = () => {
                         <li key={i}>{step}</li>
                       ))}
                     </ol>
+                    
+                    <div className="recipe-actions">
+                      <Button
+                        onClick={() => handleCookRecipe(recipe)}
+                        variant="contained"
+                        color="primary"
+                        disabled={cookingRecipe === recipe.name}
+                        className="cook-button"
+                        sx={{
+                          mt: 0,
+                          backgroundColor: "var(--coffee-medium)",
+                          "&:hover": {
+                            backgroundColor: "var(--coffee-dark)",
+                          },
+                          "&:disabled": {
+                            backgroundColor: "var(--coffee-light)",
+                          }
+                        }}
+                      >
+                        {cookingRecipe === recipe.name ? (
+                          <CircularProgress size={24} color="inherit" />
+                        ) : (
+                          "Cook This Recipe"
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -142,6 +252,17 @@ const RecipePage = () => {
           )}
         </>
       )}
+      
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

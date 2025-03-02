@@ -22,7 +22,9 @@
   .recipe-actions {
     display: flex;
     justify-content: center;
-    margin-bottom: 2rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--bg-secondary);
   }
   
   .primary-button {
@@ -94,6 +96,8 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;
+    padding-bottom: 70px; /* Space for the action button */
   }
   
   .recipe-card:hover {
@@ -129,6 +133,7 @@
   .recipe-card-body {
     padding: 1rem;
     flex-grow: 1;
+    overflow-y: auto;
   }
   
   .recipe-description {
@@ -171,4 +176,47 @@
   .suggestion-primer {
     font-size: large;
     font-weight: 600;
+  }
+
+  .cook-button {
+    background-color: var(--coffee-medium);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .cook-button:hover {
+    background-color: var(--coffee-dark);
+    transform: translateY(-2px);
+  }
+  
+  .cook-button:disabled {
+    background-color: var(--coffee-light);
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .cook-button .spinner {
+    margin-right: 8px;
+  }
+
+  .recipe-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    border-top: 2px dashed var(--coffee-light);
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    z-index: 1;
   }
