@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Modal } from "../common";
 import { toggleModal } from "../redux/actions/modalActions";
 import { addToPantry } from "../redux/actions/productActions";
+import { addSnackbar } from "../redux/actions/snackbarActions";
 
 import Tooltip from "@mui/material/Tooltip";
 import InfoIcon from "@mui/icons-material/Info";
@@ -42,6 +43,26 @@ const ReviewItemModal = () => {
   };
 
   const addItemToPantry = () => {
+    // Validate required fields
+    if (!formData.title || !formData.amount) {
+      dispatch(addSnackbar({
+        message: "Please enter a product name and quantity",
+        severity: "error",
+      }));
+      return; // Keep modal open so user can fix the issues
+    }
+
+    if (!selectedItem || !selectedItem.upc) {
+      dispatch(addSnackbar({
+        message: "Product information is incomplete. Please try scanning again.",
+        severity: "error",
+      }));
+      // Close review modal and reopen scan modal to let user try again
+      handleClose("reviewItemModal");
+      dispatch(toggleModal("scanItemModal"));
+      return;
+    }
+
     const payload = {
       productUPC: String(selectedItem.upc || ""), // Ensure UPC is always a string
       quantity: Number(formData.amount) || 1,
@@ -50,20 +71,26 @@ const ReviewItemModal = () => {
       expiration_date: formData.expiryDate,
     };
 
-    if (payload.productUPC && payload.quantity) {
-      console.log("payload", payload);
-      setIsSubmitting(true);
-      dispatch(addToPantry(payload))
-        .then(() => {
-          handleClose("reviewItemModal");
-        })
-        .catch((error) => {
-          console.error("Failed to add item to pantry:", error);
-        })
-        .finally(() => {
-          setIsSubmitting(false);
-        });
-    }
+    console.log("payload", payload);
+    setIsSubmitting(true);
+    dispatch(addToPantry(payload))
+      .then(() => {
+        handleClose("reviewItemModal");
+        // Show success message
+        dispatch(addSnackbar({
+          message: "Item added successfully",
+          severity: "success",
+        }));
+      })
+      .catch((error) => {
+        console.error("Failed to add item to pantry:", error);
+        dispatch(addSnackbar({
+          message: error.message || "Failed to add item to pantry",
+          severity: "error",
+        }));
+        // Don't close modal on error, let user try again
+        setIsSubmitting(false);
+      });
   };
 
   const handleClose = (modal_id) => {
@@ -144,30 +171,35 @@ const ReviewItemModal = () => {
 
         <div className="form-group mb-3">
           <label htmlFor="title" className="form-label">
-            Name
+            Name <span className="text-danger">*</span>
           </label>
           <input
             type="text"
             id="title"
             name="title"
-            className="form-control"
+            className={`form-control ${!formData.title ? 'border-danger' : ''}`}
             value={formData.title}
             onChange={handleChange}
+            required
           />
+          {!formData.title && (
+            <small className="text-danger">Product name is required</small>
+          )}
         </div>
 
         <div className="form-group mb-3">
           <label htmlFor="amount" className="form-label">
-            Amount
+            Amount <span className="text-danger">*</span>
           </label>
           <div className="input-group">
             <input
               type="number"
               id="amount"
               name="amount"
-              className="form-control"
+              className={`form-control ${!formData.amount ? 'border-danger' : ''}`}
               value={formData.amount}
               onChange={handleChange}
+              required
             />
             <select
               name="unit"
@@ -184,6 +216,9 @@ const ReviewItemModal = () => {
               <option value="lb">Pounds</option>
             </select>
           </div>
+          {!formData.amount && (
+            <small className="text-danger">Quantity is required</small>
+          )}
         </div>
 
         <div className="form-group mb-3">
