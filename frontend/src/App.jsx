@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from "react";
-
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useNavigate,
+  useLocation,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 
-import { Navbar } from "./common";
-
-import LandingPage from "./pages/LandingPage/LandingPage";
+import Navbar from "./common/Navbar/Navbar";
 import RecipePage from "./pages/RecipePage/RecipePage";
 import NewLandingPage from "./pages/NewLandingPage/NewLandingPage";
 import ExamplePage from "./pages/ExamplePage";
 import HomePage from "./pages/HomePage/HomePage";
 import { SignIn, SignUp } from "./pages/Auth";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
-
 import ModalProvider from "./ModalProvider";
-
 import "./App.css";
 
 // Development component that auto-logs in and redirects to home
@@ -43,8 +39,18 @@ const ProtectedRoute = ({ isLoggedIn, children }) => {
   return children;
 };
 
+const MainLayout = ({ children }) => {
+  const location = useLocation();
+  const isLandingPage = location.pathname === "/test";
+  console.log(isLandingPage);
 
-
+  return (
+    <div>
+      {!isLandingPage && <Navbar />}
+      {children}
+    </div>
+  );
+};
 
 function App() {
   // Authentication state
@@ -67,8 +73,7 @@ function App() {
   return (
     <Router>
       <ModalProvider />
-      <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout}/>
-      <div className="app-container">
+      <MainLayout>
         <Routes>
           {/* Public routes */}
           <Route
@@ -118,7 +123,7 @@ function App() {
             element={<DevAutoLogin setIsLoggedIn={setIsLoggedIn} />}
           />
         </Routes>
-      </div>
+      </MainLayout>
     </Router>
   );
 }

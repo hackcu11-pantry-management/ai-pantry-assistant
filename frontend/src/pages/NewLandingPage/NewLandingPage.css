@@ -5,30 +5,24 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh; /* Full viewport height */
-    background-color: #F9BA7B; /* Light gray background for the page */
-    overflow-x: hidden; /* Prevent horizontal scroll */
-  }
-
-  /* Hide the Navbar on the landing page */
-.navbar{
-     display: none;
-
+    height: 100vh;
+    background-color: #F9BA7B;
+    overflow-x: hidden;
   }
 
   .large-caption {
-    font-size: 3rem; /* Large font size for the main caption */
+    font-size: 3rem;
     margin-bottom: 20px;
   }
   
   .small-caption {
-    font-size: 1.2rem; /* Smaller font size for the secondary caption */
+    font-size: 1.2rem;
     margin-bottom: 30px;
   }
   
   .button-container {
     display: flex;
-    gap: 20px; /* Space between buttons */
+    gap: 20px;
     justify-content: center;
   }
   
