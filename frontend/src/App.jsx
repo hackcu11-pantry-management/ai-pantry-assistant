@@ -16,7 +16,7 @@ import CalendarPage from "./pages/CalendarPage/CalendarPage";
 import ExamplePage from "./pages/ExamplePage";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import LandingPage from "./pages/LandingPage/LandingPage";
-import NewLandingPage from "./pages/NewLandingPage/NewLandingPage";
+import ScrollLinked from "./pages/NewLandingPage/NewLandingPage";
 import RecipePage from "./pages/RecipePage/RecipePage";
 
 import ModalProvider from "./ModalProvider";
@@ -132,7 +132,7 @@ function App() {
           />
           <Route
             path="/"
-            element={<NewLandingPage setIsLoggedIn={setIsLoggedIn} />}
+            element={<ScrollLinked setIsLoggedIn={setIsLoggedIn} />}
           />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
