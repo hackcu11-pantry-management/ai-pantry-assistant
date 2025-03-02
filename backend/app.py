@@ -59,9 +59,14 @@ FOOD_CATEGORIES = [
 CORS(app, 
      resources={
          r"/*": {
-             "origins": ["*"],
+             "origins": [
+                 "https://pantrypal.up.railway.app",
+                 "https://ai-pantry-assistant-production.up.railway.app",
+                 "http://localhost:3000"  # For local development
+             ],
              "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
              "allow_headers": ["Content-Type", "Accept", "Authorization"],
+             "supports_credentials": True,
              "max_age": 3600
          }
      })
