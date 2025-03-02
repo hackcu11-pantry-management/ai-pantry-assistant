@@ -31,7 +31,7 @@ const Modal = ({ modal_id, title, children, buttons, style }) => {
           maxWidth: style?.maxWidth || "600px",
           display: "flex",
           flexDirection: "column",
-          height: "80vh",
+          maxHeight: "80vh",
         },
       }}
     >
