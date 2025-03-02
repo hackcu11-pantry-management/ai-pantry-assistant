@@ -207,10 +207,10 @@ export const getUserPantry = () => (dispatch, getState) => {
  * @param {number} pantryId
  * @param {Object} updateData
  */
-export const updatePantryItem =
-  (pantryId, updateData) => (dispatch, getState) => {
-    const userState = getState().userState;
-    const token = userState.loginResult?.token;
+export const updatePantryItem = (updateData) => {
+  return async (dispatch, getState) => {
+    const token = getState().auth.token;
+    const pantryId = updateData.pantryId;
 
     if (!token) {
       dispatch(
@@ -222,8 +222,23 @@ export const updatePantryItem =
       return Promise.reject("Not authenticated");
     }
 
+    // Make sure pantryId is a number, not an object
+    if (typeof pantryId !== 'number') {
+      console.error("Invalid pantryId:", pantryId);
+      dispatch(
+        addSnackbar({
+          message: "Invalid pantry item ID",
+          severity: "error",
+        }),
+      );
+      return Promise.reject("Invalid pantry item ID");
+    }
+
     const url = `${API_URL}/pantry/${pantryId}`;
     const authHeader = `Bearer ${token}`;
+
+    // Remove pantryId from the data we send to the API
+    const { pantryId: _, ...dataToSend } = updateData;
 
     return basicAPI(url, "updatePantryItem", {
       method: "PUT",
@@ -232,7 +247,7 @@ export const updatePantryItem =
         Authorization: authHeader,
         Accept: "application/json",
       },
-      body: JSON.stringify(updateData),
+      body: JSON.stringify(dataToSend),
     })
       .then((response) => {
         dispatch(
@@ -264,6 +279,7 @@ export const updatePantryItem =
         throw error;
       });
   };
+};
 
 /**
  * @function removePantryItem

@@ -97,6 +97,7 @@ const EditItemModal = () => {
 
     try {
       const payload = {
+        pantryId: selectedItem.pantryID,
         productUPC: selectedItem.upc,
         quantity: Number(formData.amount) || 1,
         quantityType: formData.unit,

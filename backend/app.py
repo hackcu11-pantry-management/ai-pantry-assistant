@@ -460,18 +460,46 @@ def lookup_upc():
         upc = result
 
         # First, check our database
-        product, db_error = find_product_in_db(upc)
-        print(f"Database lookup result: found={bool(product)}, error={db_error}")  # Debug log
-        
-        if db_error:
+        try:
+            # Check database connection first
+            conn = get_db_connection()
+            if not conn:
+                print(f"Database connection failed in lookup_upc. Environment: RAILWAY_ENVIRONMENT={os.getenv('RAILWAY_ENVIRONMENT')}, DATABASE_URL={'Set' if os.getenv('DATABASE_URL') else 'Not set'}")
+                return jsonify({
+                    "success": False,
+                    "source": None,
+                    "cached": False,
+                    "items": None,
+                    "error": "Database connection failed",
+                    "status": "DB_ERROR",
+                    "details": "Could not connect to the database. Please check server logs."
+                }), 503
+            
+            # If connection successful, proceed with lookup
+            product, db_error = find_product_in_db(upc)
+            print(f"Database lookup result: found={bool(product)}, error={db_error}")  # Debug log
+            
+            if db_error:
+                print(f"Database error in lookup_upc: {db_error}")
+                return jsonify({
+                    "success": False,
+                    "source": None,
+                    "cached": False,
+                    "items": None,
+                    "error": "Database error",
+                    "status": "DB_ERROR",
+                    "details": db_error
+                }), 503
+        except Exception as db_exception:
+            print(f"Exception during database operations: {str(db_exception)}")
             return jsonify({
                 "success": False,
                 "source": None,
                 "cached": False,
                 "items": None,
-                "error": "Database error",
+                "error": "Database operation failed",
                 "status": "DB_ERROR",
-                "details": db_error
+                "details": str(db_exception)
             }), 503
 
         if product:
@@ -1596,6 +1624,50 @@ Only include pantry items that should be modified. Be precise with quantities an
             'error': 'Server error',
             'status': 'SERVER_ERROR',
             'details': str(e)
+        }), 500
+
+@app.route('/api/test', methods=['GET'])
+def test_endpoint():
+    """Simple test endpoint to check if the backend is running"""
+    try:
+        # Check if we can connect to the database
+        conn = get_db_connection()
+        db_status = "Connected" if conn else "Failed to connect"
+        
+        if conn:
+            # Try to get database info
+            cur = conn.cursor()
+            cur.execute("SELECT current_database(), current_user")
+            db_info = cur.fetchone()
+            cur.close()
+            conn.close()
+        else:
+            db_info = None
+        
+        # Check environment variables
+        env_vars = {
+            "RAILWAY_ENVIRONMENT": os.getenv('RAILWAY_ENVIRONMENT'),
+            "DATABASE_URL": os.getenv('DATABASE_URL', 'Not set'),
+            "PGDATABASE": os.getenv('PGDATABASE', 'Not set'),
+            "PGUSER": os.getenv('PGUSER', 'Not set'),
+            "PGHOST": os.getenv('PGHOST', 'Not set'),
+            "PGPORT": os.getenv('PGPORT', 'Not set'),
+            "OPENAI_API_KEY": "Present" if os.getenv('OPENAI_API_KEY') else "Not set",
+            "GOUPC_API_KEY": "Present" if os.getenv('GOUPC_API_KEY') else "Not set",
+            "JWT_SECRET": "Present" if os.getenv('JWT_SECRET') else "Not set"
+        }
+        
+        return jsonify({
+            "success": True,
+            "message": "Backend is running",
+            "database_status": db_status,
+            "database_info": db_info,
+            "environment": env_vars
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
         }), 500
 
 if __name__ == '__main__':
