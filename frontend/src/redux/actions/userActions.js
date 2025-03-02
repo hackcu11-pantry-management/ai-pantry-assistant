@@ -53,6 +53,7 @@ export const login = (loginData) => (dispatch) => {
           userFirstName: response.userFirstName,
           userLastName: response.userLastName,
         };
+        localStorage.setItem("user", JSON.stringify(userData));
         console.log("Setting user data in store:", {
           ...userData,
           token: userData.token ? "Token exists" : "No token",
@@ -107,6 +108,7 @@ export const signup = (signupData) => (dispatch) => {
           token: response.token,
           username: response.username,
         };
+        localStorage.setItem("user", JSON.stringify(userData));
         dispatch(addLoginAuthentication(userData));
         dispatch(
           addSnackbar({
