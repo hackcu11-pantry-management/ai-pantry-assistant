@@ -1,6 +1,6 @@
 /** @module ScanItemModal */
 
-import React, { useRef } from "react";
+import React from "react";
 import { useDispatch } from "react-redux";
 import { toggleModal } from "../../redux/actions/modalActions";
 import Modal from "../../common/Modal/Modal";
@@ -8,7 +8,6 @@ import BarcodeScanner from "./BarcodeScanner";
 
 const ScanItemModal = () => {
   const dispatch = useDispatch();
-  const barcodeScannerRef = useRef(null);
 
   const handleClose = (modal_id) => {
     dispatch(toggleModal(modal_id));
@@ -26,7 +25,7 @@ const ScanItemModal = () => {
         },
       ]}
     >
-      <BarcodeScanner ref={barcodeScannerRef} autoStart={true} />
+      <BarcodeScanner />
     </Modal>
   );
 };

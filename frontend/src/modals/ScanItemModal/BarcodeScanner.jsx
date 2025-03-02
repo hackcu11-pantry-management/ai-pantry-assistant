@@ -1,45 +1,34 @@
 /** @module BarcodeScanner.jsx */
 
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Quagga from "quagga";
-import { selectProduct } from "../../redux/actions/productActions";
 import { useDispatch } from "react-redux";
+import { selectProduct } from "../../redux/actions/productActions";
 import { toggleModal } from "../../redux/actions/modalActions";
 
-const BarcodeScanner = forwardRef(({ autoStart }, ref) => {
+const BarcodeScanner = () => {
   const dispatch = useDispatch();
-
-  const [scanning, setScanning] = useState(false);
-  const [barcode, setBarcode] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const scannerRef = useRef(null);
   const quaggaInitialized = useRef(false);
-
-  useImperativeHandle(ref, () => ({
-    startScanner,
-    stopScanner,
-  }));
+  const detectionInProgress = useRef(false); // Flag to prevent multiple detections
 
   // Validate UPC code format
   const isValidUPC = (code) => {
-    // Remove any non-digit characters
     const cleanCode = code.replace(/[^\d]/g, "");
-    // Check if it's a valid length (UPC-A is 12 digits, UPC-E is 8 digits)
     return /^\d{8}$|^\d{12}$/.test(cleanCode);
   };
 
   // Clean UPC code
   const cleanUPC = (code) => {
-    // Remove any non-digit characters and leading/trailing whitespace
     return code.replace(/[^\d]/g, "").trim();
   };
 
-  const lookupUPC = async (upc) => {
+  const lookupUPC = (upc) => {
     setIsLoading(true);
     setError(null);
 
-    // Clean and validate the UPC
     const cleanedUPC = cleanUPC(upc);
     if (!isValidUPC(cleanedUPC)) {
       setError("Invalid UPC code format. Please try scanning again.");
@@ -47,41 +36,15 @@ const BarcodeScanner = forwardRef(({ autoStart }, ref) => {
       return;
     }
 
-    const maxRetries = 3;
-    let retryCount = 0;
-    let retryDelay = 2000; // Start with 2 seconds
-
-    while (retryCount < maxRetries) {
-      try {
-        const response = await fetch(
-          `http://localhost:5001/api/lookup-upc?upc=${cleanedUPC}`,
-        );
-        const data = await response.json();
-
-        console.log("Full API Response:", data);
-
-        if (response.status === 429) {
-          // Rate limited - use exponential backoff
-          retryCount++;
-          if (retryCount < maxRetries) {
-            const waitTime = retryDelay * Math.pow(2, retryCount - 1);
-            setError(
-              `Rate limited, retrying in ${waitTime / 1000} seconds... (Attempt ${retryCount}/${maxRetries})`,
-            );
-            await new Promise((resolve) => setTimeout(resolve, waitTime));
-            continue;
-          }
-        }
-
+    fetch(`http://localhost:5001/api/lookup-upc?upc=${cleanedUPC}`)
+      .then((response) => response.json())
+      .then((data) => {
         if (!data.success) {
           throw new Error(data.error || "Failed to lookup product");
         }
 
         if (data.items && data.items[0]) {
           const item = data.items[0];
-          console.log("Item from API:", item);
-
-          // Handle both API and database response formats
           const mappedData = {
             title: item.title || item.productname || "",
             brand: item.brand || item.productbrand || "",
@@ -103,58 +66,52 @@ const BarcodeScanner = forwardRef(({ autoStart }, ref) => {
             expiryDate: item.expiryDate || item.productexpiryDate || "",
           };
 
-          console.log("Mapped Product Data:", mappedData);
-          dispatch(selectProduct(mappedData));
-          dispatch(toggleModal("scanItemModal"));
-          dispatch(toggleModal("reviewItemModal"));
-          break; // Success - exit the retry loop
-        } else {
-          throw new Error("No product data found");
-        }
-      } catch (err) {
-        retryCount++;
-        if (retryCount === maxRetries) {
-          setError(`Error looking up product: ${err.message}`);
-        } else {
-          console.log(`Attempt ${retryCount} failed, retrying...`);
-        }
-      }
-    }
+          return mappedData;          
+        } 
 
-    setIsLoading(false);
+        return {};
+      })
+      .then(data => {
+        dispatch(selectProduct(data));
+        dispatch(toggleModal("scanItemModal"));
+        return data;
+      })
+      .then(data => {
+        dispatch(toggleModal("reviewItemModal"));
+      })
+      .catch((err) => {
+        setError(`Error looking up product: ${err.message}`);
+      })
+      .finally(() => {
+        setIsLoading(false);
+        detectionInProgress.current = false; // Reset the flag after processing
+      });
   };
 
   const onDetected = (result) => {
-    const scannedCode = result.codeResult.code;
-    console.log("Raw scanned code:", scannedCode);
+    if (detectionInProgress.current) return; // Prevent multiple detections
+    detectionInProgress.current = true; // Set the flag
 
-    // Clean and validate the code before proceeding
+    const scannedCode = result.codeResult.code;
     const cleanedCode = cleanUPC(scannedCode);
     if (!isValidUPC(cleanedCode)) {
       console.log("Invalid UPC detected:", scannedCode);
-      return; // Don't process invalid codes
+      detectionInProgress.current = false; // Reset the flag
+      return;
     }
 
-    setBarcode(cleanedCode);
     stopScanner();
     lookupUPC(cleanedCode);
   };
 
   const startScanner = () => {
-    if (scanning) return;
-
-    // Reset any previous errors
     setError(null);
 
-    // Check if the scanner element exists
     if (!scannerRef.current) {
       setError("Scanner element not found");
       return;
     }
 
-    setScanning(true);
-
-    // Use setTimeout to ensure the DOM is fully updated
     setTimeout(() => {
       Quagga.init(
         {
@@ -177,13 +134,12 @@ const BarcodeScanner = forwardRef(({ autoStart }, ref) => {
           } else {
             console.error("Quagga initialization failed:", err);
             setError(
-              `Failed to initialize scanner: ${err.message || "Unknown error"}`,
+              `Failed to initialize scanner: ${err.message || "Unknown error"}`
             );
-            setScanning(false);
           }
-        },
+        }
       );
-    }, 100); // Small delay to ensure DOM is ready
+    }, 100);
   };
 
   const stopScanner = () => {
@@ -196,35 +152,18 @@ const BarcodeScanner = forwardRef(({ autoStart }, ref) => {
         console.error("Error stopping Quagga:", error);
       }
     }
-    setScanning(false);
   };
 
-  // Start the scanner automatically if autoStart is true
   useEffect(() => {
-    if (autoStart) {
-      startScanner();
-    }
-  }, [autoStart]);
-
-  // Clean up when component unmounts
-  useEffect(() => {
+    startScanner();
     return () => {
       stopScanner();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="barcode-scanner-container">
       <h2>Barcode Scanner</h2>
-
-      <button
-        onClick={scanning ? stopScanner : startScanner}
-        className="scan-button"
-        disabled={isLoading}
-      >
-        {scanning ? "Stop Scanning" : "Start Scanning"}
-      </button>
 
       {error && (
         <div
@@ -244,22 +183,14 @@ const BarcodeScanner = forwardRef(({ autoStart }, ref) => {
           height: "300px",
           margin: "20px auto",
           position: "relative",
-          border: scanning ? "2px solid #ccc" : "none",
+          border: "2px solid #ccc",
           overflow: "hidden",
-          display: scanning ? "block" : "none",
         }}
       />
 
       {isLoading && <div className="loading">Looking up product...</div>}
-
-      {barcode && !isLoading && (
-        <div className="result">
-          <h3>Scanned Code:</h3>
-          <p>{barcode}</p>
-        </div>
-      )}
     </div>
   );
-});
+};
 
 export default BarcodeScanner;
