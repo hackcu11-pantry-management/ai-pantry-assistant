@@ -75,7 +75,7 @@ const SignUp = ({ setIsLoggedIn }) => {
         setIsLoggedIn(true);
 
         // Redirect to home page
-        navigate("/", { state: { fromLogin: true } });
+        navigate("/pantry", { state: { fromLogin: true } });
       } else {
         setError(response.error || "Failed to create account");
       }
