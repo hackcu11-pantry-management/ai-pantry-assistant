@@ -44,7 +44,7 @@ const LandingPage = () => {
             },
             {
               text: "Remove Item",
-              onClick: () => handleOpenModal("removeItemModal"),
+              onClick: () => handleOpenModal("scanItemModal"),
               variant: "contained",
             },
           ]}
