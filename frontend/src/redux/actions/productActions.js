@@ -378,3 +378,18 @@ export const getPantryIdByUserAndProduct =
         throw error;
       });
   };
+
+/**
+ * @function updatePantryItems
+ * @description Updates the pantry items in the Redux store
+ * @param {Array} pantryItems - The updated pantry items
+ */
+export const updatePantryItems = (pantryItems) => (dispatch) => {
+  dispatch(setProducts(pantryItems));
+  dispatch(
+    addSnackbar({
+      message: "Pantry updated successfully",
+      severity: "success",
+    })
+  );
+};

@@ -11,6 +11,7 @@ import jwt as pyjwt
 from datetime import datetime, timedelta
 from functools import wraps
 import time
+import json
 
 load_dotenv()
 
@@ -1397,7 +1398,204 @@ def get_pantry_item_by_upc(current_user_id, product_upc):
             'details': str(e)
         }), 500
 
+@app.route('/api/cook-recipe', methods=['POST'])
+@token_required
+def cook_recipe(current_user_id):
+    try:
+        data = request.get_json()
+        
+        if not data or 'recipe' not in data or 'pantryItems' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Recipe and pantry items are required',
+                'status': 'VALIDATION_ERROR'
+            }), 400
+        
+        recipe = data['recipe']
+        pantry_items = data['pantryItems']
+        
+        print(f"Received recipe: {recipe}")
+        print(f"Received pantry items: {pantry_items}")
+        
+        # Use OpenAI to determine which pantry items to use and their quantities
+        try:
+            prompt = f"""
+You are a helpful cooking assistant. You need to determine which pantry items should be used for a recipe and how much of each item should be used.
 
+Recipe:
+Name: {recipe.get('name', 'Unknown Recipe')}
+Ingredients: {', '.join(recipe.get('ingredients', []))}
+
+Available Pantry Items (with their IDs):
+{json.dumps(pantry_items, indent=2)}
+
+For each ingredient in the recipe, identify the matching pantry item(s) and specify:
+1. The pantryID of the item to use
+2. The quantity to deduct from the pantry
+3. If the item should be completely removed (quantity becomes 0)
+
+Return your response as a JSON array of objects with the following structure:
+[
+  {{
+    "pantryID": 123,
+    "quantityToDeduct": 2,
+    "removeCompletely": false
+  }},
+  ...
+]
+
+Only include pantry items that should be modified. Be precise with quantities and ensure they match the recipe requirements.
+"""
+            print("Sending prompt to OpenAI")
+            
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a precise cooking assistant that helps track pantry inventory."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0,
+                max_tokens=1000
+            )
+            
+            print(f"OpenAI response: {response}")
+            print(f"OpenAI content: {response.choices[0].message.content}")
+            
+        except Exception as openai_error:
+            print(f"OpenAI API error: {str(openai_error)}")
+            return jsonify({
+                'success': False,
+                'error': 'Error processing recipe with AI',
+                'status': 'AI_ERROR',
+                'details': str(openai_error)
+            }), 500
+        
+        # Parse the response to get the items to update
+        try:
+            content = response.choices[0].message.content.strip()
+            # Remove markdown code block formatting if present
+            if content.startswith("```json") or content.startswith("```"):
+                content = content.replace("```json", "", 1).replace("```", "", 1).strip()
+                # Remove trailing backticks if present
+                if content.endswith("```"):
+                    content = content[:-3].strip()
+            
+            print(f"Cleaned content for parsing: {content}")
+            items_to_update = json.loads(content)
+            print(f"Parsed items to update: {items_to_update}")
+        except json.JSONDecodeError as json_error:
+            print(f"JSON parsing error: {str(json_error)}")
+            print(f"Raw content that failed to parse: {response.choices[0].message.content}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to parse AI response',
+                'status': 'SERVER_ERROR',
+                'details': str(json_error)
+            }), 500
+        
+        # Connect to database
+        try:
+            conn = get_db_connection()
+            if not conn:
+                return jsonify({
+                    'success': False,
+                    'error': 'Database connection failed',
+                    'status': 'DB_ERROR'
+                }), 503
+            
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            updated_items = []
+            removed_items = []
+        except Exception as db_error:
+            print(f"Database connection error: {str(db_error)}")
+            return jsonify({
+                'success': False,
+                'error': 'Database error',
+                'status': 'DB_ERROR',
+                'details': str(db_error)
+            }), 503
+        
+        # Process each item to update
+        try:
+            for item in items_to_update:
+                pantry_id = item.get('pantryID')
+                quantity_to_deduct = item.get('quantityToDeduct', 0)
+                remove_completely = item.get('removeCompletely', False)
+                
+                print(f"Processing item: pantryID={pantry_id}, deduct={quantity_to_deduct}, remove={remove_completely}")
+                
+                cur.execute(
+                    "SELECT * FROM usersProducts WHERE pantryID = %s AND userID = %s",
+                    (pantry_id, current_user_id)
+                )
+                pantry_item = cur.fetchone()
+                
+                if not pantry_item:
+                    print(f"Pantry item {pantry_id} not found or doesn't belong to user {current_user_id}")
+                    continue 
+                
+                if remove_completely:
+                    cur.execute(
+                        "DELETE FROM usersProducts WHERE pantryID = %s",
+                        (pantry_id,)
+                    )
+                    removed_items.append(pantry_id)
+                else:
+                    # Calculate new quantity
+                    new_quantity = max(0, float(pantry_item['quantity']) - quantity_to_deduct)
+                    print(f"Updating quantity: old={pantry_item['quantity']}, deduct={quantity_to_deduct}, new={new_quantity}")
+                    
+                    if new_quantity <= 0:
+                        # If quantity becomes 0 or negative, remove the item
+                        cur.execute(
+                            "DELETE FROM usersProducts WHERE pantryID = %s",
+                            (pantry_id,)
+                        )
+                        removed_items.append(pantry_id)
+                    else:
+                        # Update the quantity
+                        cur.execute(
+                            "UPDATE usersProducts SET quantity = %s WHERE pantryID = %s RETURNING *",
+                            (new_quantity, pantry_id)
+                        )
+                        updated_item = cur.fetchone()
+                        updated_items.append(updated_item)
+            
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Recipe cooked successfully',
+                'updatedItems': updated_items,
+                'removedItems': removed_items
+            })
+        except Exception as processing_error:
+            print(f"Error processing items: {str(processing_error)}")
+            if conn:
+                conn.rollback()
+                cur.close()
+                conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'Error updating pantry items',
+                'status': 'DB_ERROR',
+                'details': str(processing_error)
+            }), 500
+        
+    except Exception as e:
+        print(f"Error cooking recipe: {str(e)}")
+        print(f"Recipe data: {recipe if 'recipe' in locals() else 'Not available'}")
+        print(f"Pantry items: {pantry_items if 'pantry_items' in locals() else 'Not available'}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': 'Server error',
+            'status': 'SERVER_ERROR',
+            'details': str(e)
+        }), 500
 
 if __name__ == '__main__':
     # Run on port 5001 to avoid conflicts
