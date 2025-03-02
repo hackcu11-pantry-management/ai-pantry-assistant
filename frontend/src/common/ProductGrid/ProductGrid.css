@@ -32,6 +32,12 @@
     margin-bottom: 4px;
 }
 
+.product-quantity {
+    font-size: 14px;
+    color: #3498db;
+    margin-bottom: 4px;
+}
+
 .product-expiry {
     font-size: 14px;
     color: #666;
