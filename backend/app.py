@@ -1094,7 +1094,8 @@ def add_to_pantry(current_user_id):
                     'status': 'VALIDATION_ERROR'
                 }), 400
         
-        product_upc = data['productUPC']
+        # Convert productUPC to string to handle large numbers properly
+        product_upc = str(data['productUPC'])
         quantity = data['quantity']
         quantity_type = data.get('quantityType', 'items')  # Default to 'items' if not provided
         date_purchased = data.get('date_purchased')

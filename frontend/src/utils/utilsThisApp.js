@@ -87,6 +87,8 @@ export const logApiCall = (funcProps) => {
  * @returns {Promise} the promise fetch returns
  */
 export const basicAPI = (url, description, fetchOptions = {}) => {
+  // Log the original payload before any transformation
+  console.log("Original payload:", JSON.parse(fetchOptions.body || "{}"));
   logApiCall({
     action: description,
     method: fetchOptions.method || "GET",
